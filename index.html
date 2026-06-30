@@ -3,235 +3,482 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerox Panel</title>
-
+<title>Gerox Panel v3</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<style>
-#map { height: 350px; }
-</style>
+<style>#map{height:350px}</style>
 </head>
-
 <body class="bg-[#0B0F19] text-gray-200 min-h-screen font-sans">
 
 <div class="flex min-h-screen">
 
-<!-- SOL MENÜ -->
-<aside class="w-64 bg-[#111827] p-6 border-r border-gray-800">
-<div class="text-2xl font-black text-orange-500 mb-8">Gerox</div>
+<!-- ========== SOL MENÜ ========== -->
+<aside class="w-72 bg-[#111827] p-6 border-r border-gray-800 flex flex-col">
+  <div class="text-2xl font-black text-orange-500 mb-8">Gerox</div>
 
-<nav class="space-y-2">
-<button onclick="switchTab('profile')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">Profil & Şubeler</button>
-<button onclick="switchTab('create')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">Yeni Kampanya</button>
-</nav>
+  <div class="bg-[#0F172A] border border-gray-800 rounded-xl p-4 mb-6">
+    <div class="text-xs text-gray-400">Aktif İşletme</div>
+    <div id="sb-name" class="font-bold">Yükleniyor...</div>
+    <div id="sb-count" class="text-xs text-gray-500 mt-1">-</div>
+  </div>
+
+  <nav class="space-y-2">
+    <button data-tab="home" onclick="go('home')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-house mr-2"></i>Özet</button>
+    <button data-tab="create" onclick="go('create')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-bullhorn mr-2"></i>Yeni Kampanya</button>
+    <button data-tab="active" onclick="go('active')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-fire mr-2"></i>Aktif Kampanyalar</button>
+    <button data-tab="history" onclick="go('history')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-clock-rotate-left mr-2"></i>Geçmiş</button>
+    <button data-tab="profile" onclick="go('profile')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-store mr-2"></i>Profil & Şubeler</button>
+    <button data-tab="settings" onclick="go('settings')" class="mb w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800"><i class="fa-solid fa-gear mr-2"></i>Ayarlar</button>
+  </nav>
+
+  <div class="mt-auto pt-6 text-xs text-gray-500 border-t border-gray-800">Gerox v3.0</div>
 </aside>
 
-<!-- SAĞ İÇERİK -->
+<!-- ========== SAĞ İÇERİK ========== -->
 <main class="flex-1 p-8">
 
-<!-- PROFİL -->
-<section id="tab-profile">
-
-<h1 class="text-2xl font-bold mb-6">İşletme Profili</h1>
-
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
-<div class="bg-[#111827] p-6 rounded-xl space-y-4">
-
-<input id="business-name" placeholder="İşletme Adı"
-class="w-full bg-gray-800 p-3 rounded">
-
-<input id="business-phone" placeholder="Telefon"
-class="w-full bg-gray-800 p-3 rounded">
-
-<input id="business-instagram" placeholder="Instagram Link"
-class="w-full bg-gray-800 p-3 rounded">
-
-<button onclick="saveBusiness()" class="bg-orange-600 px-6 py-3 rounded font-bold">
-Kaydet
-</button>
-
-</div>
-
-<div class="bg-[#111827] p-6 rounded-xl">
-
-<h2 class="font-bold mb-4">Şubeler</h2>
-
-<div id="branch-list" class="space-y-2 mb-4">
-Yükleniyor...
-</div>
-
-<button onclick="openBranchForm()" class="bg-orange-600 px-4 py-2 rounded">
-Yeni Şube Ekle
-</button>
-
-</div>
-
-</div>
+<!-- ÖZET -->
+<section id="s-home" class="hidden space-y-6">
+  <h1 class="text-3xl font-bold">Panel Özeti</h1>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5"><div class="text-sm text-gray-400">Aktif Kampanya</div><div id="st-active" class="text-3xl font-black text-orange-500 mt-2">0</div></div>
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5"><div class="text-sm text-gray-400">Geçmiş Kampanya</div><div id="st-history" class="text-3xl font-black mt-2">0</div></div>
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5"><div class="text-sm text-gray-400">Toplam Şube</div><div id="st-branches" class="text-3xl font-black mt-2">0</div></div>
+  </div>
+  <button onclick="go('create')" class="bg-orange-600 px-6 py-3 rounded-xl font-bold"><i class="fa-solid fa-plus mr-2"></i>Yeni Kampanya</button>
 </section>
 
-<!-- ŞUBE FORM MODAL -->
-<div id="branch-modal" class="hidden fixed inset-0 bg-black/70 flex items-center justify-center">
+<!-- YENİ KAMPANYA -->
+<section id="s-create" class="hidden space-y-6">
+  <h1 class="text-3xl font-bold">Yeni Kampanya</h1>
 
-<div class="bg-[#111827] p-6 rounded-xl w-[700px] space-y-4">
+  <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+    <!-- FORM -->
+    <div class="xl:col-span-7 bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-5">
+      <div>
+        <label class="block text-xs uppercase text-gray-400 mb-2 font-semibold">1. Ana Tür</label>
+        <select id="lvl-type" onchange="refCats()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+          <option value="">Seçin...</option>
+          <option value="gida">Gıda</option>
+          <option value="gidadisi">Gıda Dışı</option>
+        </select>
+      </div>
+      <div>
+        <label class="block text-xs uppercase text-gray-400 mb-2 font-semibold">2. Kategori</label>
+        <select id="lvl-cat" onchange="refProds()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50"><option value="">Önce tür seçin</option></select>
+      </div>
+      <div>
+        <label class="block text-xs uppercase text-gray-400 mb-2 font-semibold">3. Ürün</label>
+        <select id="lvl-prod" onchange="updPreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50"><option value="">Önce kategori seçin</option></select>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Eski Fiyat ₺</label><input id="pold" type="number" oninput="updPreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3"></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Yeni Fiyat ₺</label><input id="pnew" type="number" oninput="updPreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3"></div>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-xs text-gray-400 mb-1">Başlangıç</label><input id="dstart" type="date" onchange="updPreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white"></div>
+        <div><label class="block text-xs text-gray-400 mb-1">Bitiş</label><input id="dend" type="date" onchange="updPreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white"></div>
+      </div>
+      <div>
+        <label class="block text-xs uppercase text-gray-400 mb-2 font-semibold">Geçerli Şubeler</label>
+        <div id="br-list" class="bg-[#1F2937] border border-gray-700 rounded-xl p-4 max-h-40 overflow-y-auto text-sm">Yükleniyor...</div>
+      </div>
+      <button onclick="pubDeal()" id="btn-pub" class="w-full bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold py-4 rounded-xl"><i class="fa-solid fa-paper-plane mr-2"></i>Kampanyayı Yayınla</button>
+    </div>
 
-<h2 class="text-xl font-bold">Yeni Şube</h2>
+    <!-- ÖNİZLEME -->
+    <div class="xl:col-span-5 space-y-4">
+      <h2 class="text-lg font-semibold text-gray-400">Önizleme</h2>
+      <div id="pv-empty" class="bg-[#111827] border border-gray-800 rounded-2xl p-10 text-center text-gray-500">Ürün ve fiyat girin.</div>
+      <div id="pv-card" class="hidden bg-[#111827] border border-gray-800 rounded-3xl overflow-hidden">
+        <div class="relative h-64 bg-black">
+          <img id="pv-img" src="" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+          <div id="pv-date" class="absolute top-3 left-3 bg-black/80 border border-orange-500 text-orange-400 text-xs font-bold px-3 py-1 rounded-full">01–08 TEMMUZ 2026</div>
+          <div id="pv-disc" class="absolute top-3 right-3 bg-black/80 border border-orange-500 text-white text-xs font-black px-3 py-1 rounded-full">-%20</div>
+        </div>
+        <div class="p-5">
+          <div id="pv-cat" class="text-xs uppercase tracking-wider text-orange-400 font-bold mb-1">MANAV</div>
+          <h3 id="pv-title" class="text-2xl font-black mb-3">Karpuz (KG)</h3>
+          <div class="flex items-end gap-3">
+            <span id="pv-old" class="text-gray-500 line-through">29,90 ₺</span>
+            <span id="pv-new" class="text-4xl font-black text-orange-500">19,90 ₺</span>
+          </div>
+          <div class="mt-4 text-xs text-gray-400" id="pv-branch">Seçili şubelerde geçerli</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<input id="branch-name" placeholder="Şube Adı"
-class="w-full bg-gray-800 p-3 rounded">
+<!-- AKTİF KAMPANYALAR -->
+<section id="s-active" class="hidden space-y-6">
+  <h1 class="text-3xl font-bold">Aktif Kampanyalar</h1>
+  <div id="act-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">Yükleniyor...</div>
+</section>
 
-<input id="branch-city" placeholder="İl"
-class="w-full bg-gray-800 p-3 rounded">
+<!-- GEÇMİŞ -->
+<section id="s-history" class="hidden space-y-6">
+  <h1 class="text-3xl font-bold">Geçmiş Kampanyalar</h1>
+  <div id="his-list" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">Yükleniyor...</div>
+</section>
 
-<input id="branch-district" placeholder="İlçe"
-class="w-full bg-gray-800 p-3 rounded">
+<!-- PROFİL & ŞUBELER -->
+<section id="s-profile" class="hidden space-y-6">
+  <h1 class="text-3xl font-bold">İşletme Profili</h1>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-semibold border-b border-gray-800 pb-3">İşletme Bilgileri</h2>
+      <input id="b-name" placeholder="İşletme Adı" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+      <input id="b-phone" placeholder="Telefon" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+      <input id="b-insta" placeholder="Instagram Link" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+      <button onclick="saveBiz()" class="bg-orange-600 px-6 py-3 rounded-xl font-bold">Kaydet</button>
+    </div>
+    <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-4">
+      <h2 class="text-lg font-semibold border-b border-gray-800 pb-3">Şubeler</h2>
+      <div id="brc-list" class="space-y-3 max-h-80 overflow-y-auto">Yükleniyor...</div>
+      <button onclick="openBModal()" class="bg-orange-600 px-4 py-2 rounded-xl"><i class="fa-solid fa-plus mr-2"></i>Yeni Şube</button>
+    </div>
+  </div>
+</section>
 
-<input id="branch-neighborhood" placeholder="Mahalle"
-class="w-full bg-gray-800 p-3 rounded">
-
-<input id="branch-address" placeholder="Açık Adres"
-class="w-full bg-gray-800 p-3 rounded">
-
-<div id="map"></div>
-
-<input id="branch-lat" placeholder="Latitude"
-class="w-full bg-gray-800 p-3 rounded">
-
-<input id="branch-lng" placeholder="Longitude"
-class="w-full bg-gray-800 p-3 rounded">
-
-<div class="flex gap-3">
-<button onclick="saveBranch()" class="bg-orange-600 px-4 py-2 rounded">
-Kaydet
-</button>
-<button onclick="closeBranchForm()" class="bg-gray-700 px-4 py-2 rounded">
-İptal
-</button>
-</div>
-
-</div>
-</div>
+<!-- AYARLAR -->
+<section id="s-settings" class="hidden space-y-6 max-w-xl">
+  <h1 class="text-3xl font-bold">Ayarlar</h1>
+  <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-4">
+    <div><label class="block text-xs uppercase text-gray-400 mb-2">Supabase URL</label><input id="cfg-url" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3"></div>
+    <div><label class="block text-xs uppercase text-gray-400 mb-2">Anon Key</label><input id="cfg-key" type="password" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3"></div>
+    <button onclick="saveCfg()" class="bg-orange-600 px-6 py-3 rounded-xl font-bold">Kaydet & Bağlan</button>
+  </div>
+</section>
 
 </main>
 </div>
 
+<!-- ŞUBE MODAL -->
+<div id="bmodal" class="hidden fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+<div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 w-full max-w-xl space-y-4">
+  <h2 class="text-xl font-bold">Yeni Şube Ekle</h2>
+  <input id="bm-name" placeholder="Şube Adı" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  <input id="bm-city" placeholder="İl" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  <input id="bm-dist" placeholder="İlçe" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  <input id="bm-neigh" placeholder="Mahalle" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  <input id="bm-addr" placeholder="Açık Adres" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  <div id="map"></div>
+  <p class="text-xs text-gray-400">Haritaya tıklayarak konum seçin</p>
+  <div class="grid grid-cols-2 gap-3">
+    <input id="bm-lat" placeholder="Enlem (lat)" class="bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+    <input id="bm-lng" placeholder="Boylam (lng)" class="bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+  </div>
+  <div class="flex gap-3">
+    <button onclick="saveBranch()" class="flex-1 bg-orange-600 py-3 rounded-xl font-bold">Kaydet</button>
+    <button onclick="closeBModal()" class="px-6 bg-gray-700 py-3 rounded-xl">İptal</button>
+  </div>
+</div>
+</div>
+
 <script>
-let client = null;
-let map;
-let marker = null;
-let currentBusiness = null;
+// ================== GLOBAL ==================
+let client=null, biz=null, map=null, marker=null;
+const MONTHS=["OCAK","ŞUBAT","MART","NİSAN","MAYIS","HAZİRAN","TEMMUZ","AĞUSTOS","EYLÜL","EKİM","KASIM","ARALIK"];
 
-function switchTab(tab) {
-document.querySelectorAll("section").forEach(s => s.classList.add("hidden"));
-document.getElementById("tab-" + tab).classList.remove("hidden");
+// ================== KATALOG ==================
+const CAT={
+gida:{
+manav:[{n:"Karpuz (KG)",i:"https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=800"},{n:"Domates (KG)",i:"https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=800"},{n:"Salatalık (KG)",i:"https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=800"},{n:"Muz Anamur (KG)",i:"https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=800"},{n:"Elma (KG)",i:"https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=800"},{n:"Portakal (KG)",i:"https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=800"}],
+kasap:[{n:"Dana Kıyma (KG)",i:"https://images.unsplash.com/photo-1607623814075-e51df1ce032c?w=800"},{n:"Tavuk But (KG)",i:"https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=800"},{n:"Köfte (KG)",i:"https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=800"}],
+sut:[{n:"Tam Yağlı Süt (1L)",i:"https://images.unsplash.com/photo-1563636619-e9143da7973b?w=800"},{n:"Beyaz Peynir (KG)",i:"https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800"},{n:"Yoğurt (3KG)",i:"https://images.unsplash.com/photo-1488477181946-6428a0291777?w=800"}],
+bakliyat:[{n:"Pirinç (KG)",i:"https://images.unsplash.com/photo-1586201375761-83865001e31c?w=800"},{n:"Bulgur (KG)",i:"https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=800"},{n:"Nohut (KG)",i:"https://images.unsplash.com/photo-1515543904379-3d757afe72e3?w=800"}],
+cay:[{n:"Siyah Çay (1KG)",i:"https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=800"},{n:"Filtre Kahve (250g)",i:"https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800"}]
+},
+gidadisi:{
+temizlik:[{n:"Bulaşık Deterjanı",i:"https://images.unsplash.com/photo-1563453392212-326f5e854473?w=800"},{n:"Çamaşır Suyu",i:"https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=800"}],
+kisisel:[{n:"Şampuan",i:"https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800"},{n:"Diş Macunu",i:"https://images.unsplash.com/photo-1559671088-292d6132e57c?w=800"}]
+}
+};
+
+// ================== YARDIMCI ==================
+function $(id){return document.getElementById(id)}
+function go(t){document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));$("s-"+t).classList.remove("hidden");document.querySelectorAll(".mb").forEach(b=>{b.classList.remove("bg-orange-600","text-white");b.classList.add("text-gray-300")});const b=document.querySelector(`[data-tab="${t}"]`);if(b){b.classList.add("bg-orange-600","text-white");b.classList.remove("text-gray-300")}if(t==="home")loadOverview();if(t==="active")loadActive();if(t==="history")loadHistory();if(t==="profile")loadProfile();}
+function fmt(n){return Number(n||0).toLocaleString("tr-TR",{minimumFractionDigits:2,maximumFractionDigits:2})+" ₺"}
+function cap(s){return s?s.charAt(0).toUpperCase()+s.slice(1):""}
+function dateRange(a,b){if(!a||!b)return"TARİH YOK";const p=s=>new Date(String(s).split("T")[0]+"T12:00:00");const d1=p(a),d2=p(b);const sd=String(d1.getDate()).padStart(2,"0"),ed=String(d2.getDate()).padStart(2,"0"),m1=MONTHS[d1.getMonth()],m2=MONTHS[d2.getMonth()],y1=d1.getFullYear(),y2=d2.getFullYear();if(y1===y2&&d1.getMonth()===d2.getMonth())return sd+"–"+ed+" "+m1+" "+y1;if(y1===y2)return sd+" "+m1+" – "+ed+" "+m2+" "+y1;return sd+" "+m1+" "+y1+" – "+ed+" "+m2+" "+y2;}
+function isActive(d){const now=Date.now();const end=d.end_date?new Date(d.end_date).getTime():null;return d.active===true&&(!end||end>=now);}
+
+// ================== AYARLAR ==================
+function saveCfg(){localStorage.setItem("g_url",$("cfg-url").value.trim());localStorage.setItem("g_key",$("cfg-key").value.trim());boot();alert("Kaydedildi ✅");go("home");}
+
+// ================== BAŞLANGIÇ ==================
+async function boot(){
+  $("cfg-url").value=localStorage.getItem("g_url")||"";
+  $("cfg-key").value=localStorage.getItem("g_key")||"";
+  const u=localStorage.getItem("g_url"),k=localStorage.getItem("g_key");
+  if(!u||!k){go("settings");return;}
+  const{createClient}=window.supabase;client=createClient(u,k);
+
+  // Otomatik süresi dolanları kapat
+  await client.from("deals").update({active:false}).eq("active",true).lt("end_date",new Date().toISOString());
+
+  // İşletme
+  const{data:b}=await client.from("businesses").select("id,name,phone,instagram").order("created_at",{ascending:true}).limit(1).single();
+  if(b){biz=b;$("sb-name").innerText=b.name;}
+
+  // Şubeler
+  const{data:br}=await client.from("branches").select("id,name").eq("business_id",biz?.id);
+  $("sb-count").innerText=(br||[]).length+" şube";
+
+  // Tarihleri ayarla
+  const today=new Date();const next=new Date();next.setDate(today.getDate()+7);
+  $("dstart").value=today.toISOString().split("T")[0];
+  $("dend").value=next.toISOString().split("T")[0];
+
+  go("home");
 }
 
-async function init() {
-const url = localStorage.getItem("gerox_url");
-const key = localStorage.getItem("gerox_key");
-
-if (!url || !key) {
-alert("Önce bağlantı ayarlarını gir.");
-return;
+// ================== ÖZET ==================
+async function loadOverview(){
+  if(!client)return;
+  const{data}=await client.from("deals").select("*").order("created_at",{ascending:false});
+  const{data:br}=await client.from("branches").select("id").eq("business_id",biz?.id);
+  const active=(data||[]).filter(isActive);
+  const hist=(data||[]).filter(d=>!isActive(d));
+  $("st-active").innerText=active.length;
+  $("st-history").innerText=hist.length;
+  $("st-branches").innerText=(br||[]).length;
 }
 
-const { createClient } = window.supabase;
-client = createClient(url, key);
-
-await loadBusiness();
-await loadBranches();
+// ================== FORM AKIŞI ==================
+function refCats(){
+  const t=$("lvl-type").value,cs=$("lvl-cat"),ps=$("lvl-prod");
+  cs.innerHTML='<option value="">Kategori seçin</option>';ps.innerHTML='<option value="">Önce kategori seçin</option>';ps.disabled=true;
+  if(!t||!CAT[t]){cs.disabled=true;return;}
+  Object.keys(CAT[t]).forEach(c=>{cs.innerHTML+=`<option value="${c}">${cap(c)}</option>`});cs.disabled=false;
+  updPreview();
+}
+function refProds(){
+  const t=$("lvl-type").value,c=$("lvl-cat").value,ps=$("lvl-prod");
+  ps.innerHTML='<option value="">Ürün seçin</option>';
+  if(!t||!c||!CAT[t]||!CAT[t][c]){ps.disabled=true;return;}
+  CAT[t][c].forEach((p,i)=>{ps.innerHTML+=`<option value="${i}">${p.n}</option>`});ps.disabled=false;
+  updPreview();
+}
+function getProd(){
+  const t=$("lvl-type").value,c=$("lvl-cat").value,i=$("lvl-prod").value;
+  if(!t||!c||i==="")return null;if(!CAT[t]||!CAT[t][c])return null;
+  return{type:t,category:c,...CAT[t][c][i]};
+}
+function updPreview(){
+  const p=getProd(),old=parseFloat($("pold").value)||0,nw=parseFloat($("pnew").value)||0,ds=$("dstart").value,de=$("dend").value;
+  if(!p){$("pv-card").classList.add("hidden");$("pv-empty").classList.remove("hidden");return;}
+  const disc=old>0?Math.round(((old-nw)/old)*100):0;
+  $("pv-img").src=p.i;$("pv-cat").innerText=cap(p.category).toUpperCase();$("pv-title").innerText=p.n;
+  $("pv-old").innerText=fmt(old);$("pv-new").innerText=fmt(nw);
+  $("pv-disc").innerText=disc>0?"-%"+disc:"%0";
+  $("pv-date").innerText=dateRange(ds,de);
+  const bc=document.querySelectorAll("#br-list input:checked").length;
+  $("pv-branch").innerText=bc>0?bc+" şubede geçerli":"Seçili şubelerde geçerli";
+  $("pv-empty").classList.add("hidden");$("pv-card").classList.remove("hidden");
 }
 
-async function loadBusiness() {
-const { data } = await client.from("businesses").select("*").limit(1).single();
-if (data) {
-currentBusiness = data;
-document.getElementById("business-name").value = data.name || "";
-document.getElementById("business-phone").value = data.phone || "";
-document.getElementById("business-instagram").value = data.instagram || "";
-}
-}
-
-async function saveBusiness() {
-if (!currentBusiness) return;
-
-await client.from("businesses").update({
-name: document.getElementById("business-name").value,
-phone: document.getElementById("business-phone").value,
-instagram: document.getElementById("business-instagram").value
-}).eq("id", currentBusiness.id);
-
-alert("Kaydedildi ✅");
+// ================== ŞUBE LİSTESİ ==================
+async function loadBranchUI(){
+  if(!client)return;
+  const{data}=await client.from("branches").select("id,name,city,district,neighborhood,address").eq("business_id",biz?.id);
+  const el=$("br-list");el.innerHTML="";
+  if(!data||data.length===0){el.innerHTML='<span class="text-yellow-300 text-sm">Şube bulunamadı.</span>';return;}
+  data.forEach(b=>{el.innerHTML+=`<label class="flex items-center gap-3 py-2 cursor-pointer hover:text-white"><input type="checkbox" value="${b.id}" class="accent-orange-500">${b.name}</label>`;});
 }
 
-async function loadBranches() {
-const { data } = await client.from("branches").select("*");
-const list = document.getElementById("branch-list");
-list.innerHTML = "";
-
-if (!data || data.length === 0) {
-list.innerHTML = "Şube yok.";
-return;
+// ================== KAMPANYA YAYINLA ==================
+async function pubDeal(){
+  if(!client||!biz){alert("Bağlantı eksik.");return;}
+  const p=getProd(),old=parseFloat($("pold").value),nw=parseFloat($("pnew").value),ds=$("dstart").value,de=$("dend").value;
+  const brs=Array.from(document.querySelectorAll("#br-list input:checked")).map(x=>x.value);
+  if(!p||!old||!nw||!ds||!de||brs.length===0){alert("Tüm alanları doldur ve şube seç.");return;}
+  if(new Date(de)<new Date(ds)){alert("Bitiş tarihi yanlış.");return;}
+  $("btn-pub").disabled=true;$("btn-pub").innerHTML='<i class="fa-solid fa-spinner fa-spin mr-2"></i>Yayınlanıyor...';
+  const{data:deal,error}=await client.from("deals").insert({business_id:biz.id,title:p.n,old_price:old,new_price:nw,image_url:p.i,start_date:ds+"T00:00:00",end_date:de+"T23:59:59",active:true,main_type:p.type,category:p.category}).select().single();
+  if(error){alert(error.message);$("btn-pub").disabled=false;$("btn-pub").innerHTML='<i class="fa-solid fa-paper-plane mr-2"></i>Kampanyayı Yayınla';return;}
+  await client.from("deal_branches").insert(brs.map(id=>({deal_id:deal.id,branch_id:id})));
+  alert("✅ Kampanya yayınlandı: "+p.n);
+  $("btn-pub").disabled=false;$("btn-pub").innerHTML='<i class="fa-solid fa-paper-plane mr-2"></i>Kampanyayı Yayınla';
+  go("active");
 }
 
-data.forEach(b => {
-list.innerHTML += `
-<div class="bg-gray-800 p-3 rounded">
-<b>${b.name}</b><br>
-${b.city} / ${b.district}<br>
-${b.address}
-</div>`;
-});
+// ================== AKTİF / GEÇMİŞ ==================
+async function fetchAllDeals(){
+  if(!client)return[];
+  const{data:d}=await client.from("deals").select("*").order("created_at",{ascending:false});
+  const{data:lnk}=await client.from("deal_branches").select("deal_id,branch_id");
+  const bcMap={};(lnk||[]).forEach(l=>{bcMap[l.deal_id]=(bcMap[l.deal_id]||0)+1});
+  return(d||[]).map(deal=>({...deal,bname:biz?.name||"Market",bcount:bcMap[deal.id]||0,dlbl:dateRange(deal.start_date,deal.end_date),dpct:deal.old_price>0?Math.round(((deal.old_price-deal.new_price)/deal.old_price)*100):0}));
 }
 
-function openBranchForm() {
-document.getElementById("branch-modal").classList.remove("hidden");
-
-setTimeout(() => {
-map = L.map("map").setView([37.9250, 40.2170], 13);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
-
-map.on("click", function(e) {
-if (marker) map.removeLayer(marker);
-marker = L.marker(e.latlng).addTo(map);
-document.getElementById("branch-lat").value = e.latlng.lat;
-document.getElementById("branch-lng").value = e.latlng.lng;
-});
-}, 100);
+function dealCard(d,active){
+  return`<div class="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden ${active?"":"opacity-75"}">
+  <div class="relative h-44 bg-black"><img src="${d.image_url}" class="w-full h-full object-cover">
+  <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+  <div class="absolute top-3 left-3 ${active?"bg-black/80 border border-orange-500 text-orange-400":"bg-gray-900/90 border border-gray-600 text-gray-400"} text-[11px] font-bold px-3 py-1 rounded-full">${d.dlbl}</div>
+  <div class="absolute top-3 right-3 ${active?"bg-black/80 border border-orange-500 text-white":"bg-gray-900/90 border border-gray-600 text-gray-400"} text-xs font-black px-3 py-1 rounded-full">-${d.dpct}%</div>
+  </div>
+  <div class="p-5">
+  <div class="text-xs uppercase tracking-wider text-orange-400 font-bold mb-1">${cap(d.category||"-")}</div>
+  <h3 class="text-lg font-black mb-2">${d.title}</h3>
+  <div class="flex items-baseline gap-3 mb-3"><span class="text-gray-500 line-through text-sm">${fmt(d.old_price)}</span><span class="text-2xl font-black text-orange-500">${fmt(d.new_price)}</span></div>
+  <div class="text-sm text-gray-400 mb-3">${d.bcount} şubede aktif</div>
+  ${active?`<div class="grid grid-cols-1 gap-2">
+  <button onclick="dlPost('${d.id}')" class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl"><i class="fa-solid fa-download mr-2"></i>Instagram Post İndir</button>
+  <button onclick="stopDeal('${d.id}')" class="bg-gray-800 hover:bg-gray-700 text-white py-3 rounded-xl"><i class="fa-solid fa-pause mr-2"></i>Durdur</button>
+  </div>`:""}
+  </div></div>`;
 }
 
-function closeBranchForm() {
-document.getElementById("branch-modal").classList.add("hidden");
-if (map) map.remove();
+async function loadActive(){
+  const all=await fetchAllDeals();const a=all.filter(isActive);
+  $("act-list").innerHTML=a.length?a.map(d=>dealCard(d,true)).join(""):'<p class="text-gray-500">Aktif kampanya yok.</p>';
+}
+async function loadHistory(){
+  const all=await fetchAllDeals();const h=all.filter(d=>!isActive(d));
+  $("his-list").innerHTML=h.length?h.map(d=>dealCard(d,false)).join(""):'<p class="text-gray-500">Geçmiş kampanya yok.</p>';
+}
+async function stopDeal(id){
+  if(!confirm("Bu kampanya durdurulsun mu?"))return;
+  await client.from("deals").update({active:false}).eq("id",id);
+  loadActive();loadHistory();
 }
 
-async function saveBranch() {
-if (!currentBusiness) return;
+// ================== PROFİL ==================
+async function loadProfile(){
+  if(!biz)return;
+  $("b-name").value=biz.name||"";$("b-phone").value=biz.phone||"";$("b-insta").value=biz.instagram||"";
 
-const lat = document.getElementById("branch-lat").value;
-const lng = document.getElementById("branch-lng").value;
-
-await client.from("branches").insert({
-business_id: currentBusiness.id,
-name: document.getElementById("branch-name").value,
-city: document.getElementById("branch-city").value,
-district: document.getElementById("branch-district").value,
-neighborhood: document.getElementById("branch-neighborhood").value,
-address: document.getElementById("branch-address").value,
-location: `SRID=4326;POINT(${lng} ${lat})`
-});
-
-closeBranchForm();
-await loadBranches();
-alert("Şube eklendi ✅");
+  const{data}=await client.from("branches").select("*").eq("business_id",biz.id);
+  const el=$("brc-list");el.innerHTML="";
+  if(!data||data.length===0){el.innerHTML='<p class="text-gray-500">Henüz şube yok.</p>';return;}
+  data.forEach(b=>{
+    el.innerHTML+=`<div class="bg-[#1F2937] border border-gray-700 rounded-xl p-4 flex justify-between items-start">
+    <div><b class="text-white">${b.name}</b><br><span class="text-sm text-gray-400">${b.city||"-"} / ${b.district||"-"} / ${b.neighborhood||"-"}<br>${b.address||"-"}</span></div>
+    <button onclick="delBranch('${b.id}')" class="text-red-400 hover:text-red-300 text-sm">Sil</button>
+    </div>`;
+  });
 }
 
-window.onload = init;
+async function saveBiz(){
+  if(!biz)return;
+  await client.from("businesses").update({name:$("b-name").value,phone:$("b-phone").value,instagram:$("b-insta").value}).eq("id",biz.id);
+  biz.name=$("b-name").value;$("sb-name").innerText=biz.name;
+  alert("İşletme güncellendi ✅");
+}
+
+async function delBranch(id){
+  if(!confirm("Şube silinsin mi?"))return;
+  await client.from("branches").delete().eq("id",id);
+  loadProfile();loadBranchUI();
+}
+
+// ================== ŞUBE MODAL ==================
+function openBModal(){
+  $("bmodal").classList.remove("hidden");
+  setTimeout(()=>{
+    map=L.map("map").setView([37.925,40.217],13);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+    map.on("click",e=>{if(marker)map.removeLayer(marker);marker=L.marker(e.latlng).addTo(map);$("bm-lat").value=e.latlng.lat;$("bm-lng").value=e.latlng.lng;});
+  },100);
+}
+function closeBModal(){$("bmodal").classList.add("hidden");if(map){map.remove();map=null;marker=null;}}
+
+async function saveBranch(){
+  if(!biz)return;
+  const lat=$("bm-lat").value,lng=$("bm-lng").value;
+  if(!lat||!lng){alert("Haritadan konum seçin.");return;}
+  await client.from("branches").insert({
+    business_id:biz.id,
+    name:$("bm-name").value,
+    city:$("bm-city").value,
+    district:$("bm-dist").value,
+    neighborhood:$("bm-neigh").value,
+    address:$("bm-addr").value,
+    location:"SRID=4326;POINT("+lng+" "+lat+")"
+  });
+  closeBModal();
+  await loadBranchUI();
+  await loadProfile();
+  const{data:br}=await client.from("branches").select("id").eq("business_id",biz.id);
+  $("sb-count").innerText=(br||[]).length+" şube";
+  alert("Şube eklendi ✅");
+}
+
+// ================== INSTAGRAM POST İNDİR ==================
+function dlPost(id){
+  // Tüm kampanyaları çek
+  client.from("deals").select("*").eq("id",id).single().then(({data:d})=>{
+    if(!d){alert("Kampanya bulunamadı.");return;}
+
+    const c=document.createElement("canvas");c.width=1080;c.height=1080;
+    const ctx=c.getContext("2d");
+
+    // Arka plan
+    ctx.fillStyle="#05070D";ctx.fillRect(0,0,1080,1080);
+
+    const img=new Image();img.crossOrigin="anonymous";
+    img.onload=()=>{
+      // Ürün görseli
+      const scale=Math.max(1000/img.width,520/img.height);
+      const sw=img.width*scale,sh=img.height*scale;
+      ctx.drawImage(img,40+(1000-sw)/2,180+(520-sh)/2,sw,sh);
+
+      // Overlay
+      const grd=ctx.createLinearGradient(0,160,0,1080);
+      grd.addColorStop(0,"rgba(0,0,0,0.10)");grd.addColorStop(0.55,"rgba(0,0,0,0.15)");grd.addColorStop(1,"rgba(0,0,0,0.85)");
+      ctx.fillStyle=grd;ctx.fillRect(40,180,1000,520);
+
+      // Market adı
+      ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 60px Arial";
+      ctx.fillText((d.business_id?"MARKET":"MARKET").toUpperCase(),540,90);
+
+      // Turuncu çizgi
+      ctx.strokeStyle="#FF6B00";ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(340,125);ctx.lineTo(740,125);ctx.stroke();
+
+      // Tarih
+      const dlbl=dateRange(d.start_date,d.end_date);
+      ctx.fillStyle="rgba(0,0,0,0.80)";ctx.beginPath();ctx.roundRect?ctx.roundRect(60,48,ctx.measureText(dlbl).width+60,56,28):ctx.fillRect(60,48,ctx.measureText(dlbl).width+60,56);ctx.fill();
+      ctx.strokeStyle="#FF6B00";ctx.lineWidth=2;ctx.stroke();
+      ctx.fillStyle="#FF8A2A";ctx.font="bold 24px Arial";ctx.textAlign="center";ctx.fillText(dlbl,100,83);
+
+      // İndirim rozeti
+      const disc=d.old_price>0?Math.round(((d.old_price-d.new_price)/d.old_price)*100):0;
+      ctx.beginPath();ctx.arc(900,115,90,0,Math.PI*2);ctx.fillStyle="rgba(0,0,0,0.82)";ctx.fill();ctx.lineWidth=4;ctx.strokeStyle="#FF6B00";ctx.shadowColor="#FF6B00";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;
+      ctx.fillStyle="#FFF";ctx.font="bold 60px Arial";ctx.textAlign="center";ctx.fillText("%"+disc,900,110);
+      ctx.fillStyle="#FF8A2A";ctx.font="bold 22px Arial";ctx.fillText("İNDİRİM",900,150);
+
+      // Ürün adı
+      ctx.textAlign="left";ctx.fillStyle="#FFF";ctx.font="bold 78px Arial";
+      ctx.fillText((d.title||"ÜRÜN").toUpperCase(),70,850);
+
+      // Eski fiyat
+      ctx.fillStyle="#9CA3AF";ctx.font="bold 50px Arial";
+      ctx.fillText(fmt(d.old_price),700,810);
+      const ow=ctx.measureText(fmt(d.old_price)).width;
+      ctx.strokeStyle="#FF6B00";ctx.lineWidth=4;ctx.beginPath();ctx.moveTo(700,795);ctx.lineTo(700+ow,795);ctx.stroke();
+
+      // Yeni fiyat
+      ctx.fillStyle="#FFF";ctx.font="bold 110px Arial";ctx.shadowColor="#FF6B00";ctx.shadowBlur=22;
+      ctx.fillText(fmt(d.new_price),650,970);ctx.shadowBlur=0;
+
+      // Alt tarih
+      ctx.textAlign="center";ctx.fillStyle="#FF8A2A";ctx.font="bold 26px Arial";
+      ctx.fillText(dlbl+" GEÇERLİ",540,1040);
+
+      const link=document.createElement("a");link.download=d.title.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g,"").replace(/\s+/g,"-")+"-instagram.png";link.href=c.toDataURL("image/png");link.click();
+    };
+    img.src=d.image_url||"https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=800";
+  });
+}
+
+// ================== BAŞLAT ==================
+window.onload=()=>{boot();};
 </script>
 
 </body>
