@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerox - İşletme Paneli</title>
+<title>Gerox - Mağaza Paneli</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -13,110 +13,335 @@
 <aside class="w-64 bg-[#111827] min-h-screen p-6 border-r border-gray-800">
 <div class="text-2xl font-black text-orange-500 mb-8">Gerox</div>
 <nav class="space-y-3">
-<button onclick="switchTab('dashboard')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">İndirim Ekle</button>
-<button onclick="switchTab('ayarlar')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">Bağlantı Ayarları</button>
+<button onclick="switchTab('dashboard')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">Yeni İndirim</button>
+<button onclick="switchTab('list')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">Aktif İndirimler</button>
 </nav>
 </aside>
 <main class="flex-1 p-8">
 <section id="tab-dashboard">
-<h1 class="text-2xl font-bold mb-2">Yeni İndirim Ekle</h1>
-<p class="text-gray-400 text-sm mb-6">Ürün kategorisini seçerek hatasız indirim yayınlayın.</p>
-
-<div id="setup-warning" class="hidden bg-yellow-900/40 border border-yellow-500 p-4 rounded mb-6">Önce bağlantı ayarlarını yapmalısın.</div>
+<h1 class="text-2xl font-bold mb-6">Kampanya Oluştur</h1>
+<div id="setup-warning" class="hidden bg-yellow-900/40 border border-yellow-500 p-4 rounded mb-6 text-yellow-200">Önce bağlantı ayarlarını yapmalısın. <button onclick="showSettings()" class="underline font-bold ml-2">Ayarlar</button></div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<div class="bg-[#111827] p-6 rounded-xl space-y-4">
+<!-- SOL: FORM -->
+<div class="bg-[#111827] p-6 rounded-xl space-y-4 border border-gray-800">
 
-<!-- 1. ANA KATEGORİ -->
+<!-- SEVİYE 1: ANA TÜR -->
 <div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Sektör Seç</label>
-<select id="ana-kat" onchange="updateAltKategori()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">1. Ana Tür</label>
+<select id="level-type" onchange="updateCategories()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white">
 <option value="">Seçin...</option>
-<option value="gida">Gıda</option>
-<option value="gida-dis">Gıda Dışı</option>
+<option value="gida">🍎 Gıda</option>
+<option value="gidadisi">🧴 Gıda Dışı</option>
 </select>
 </div>
 
-<!-- 2. ALT KATEGORİ (İşletme Tipi) -->
+<!-- SEVİYE 2: KATEGORİ -->
 <div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">İşletme Tipi / Reyon</label>
-<select id="alt-kat" onchange="updateUrun()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
-<option value="">Önce sektör seçin...</option>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">2. Kategori</label>
+<select id="level-cat" onchange="updateProducts()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+<option value="">Önce tür seçin</option>
 </select>
 </div>
 
-<!-- 3. ÜRÜN -->
+<!-- SEVİYE 3: ÜRÜN -->
 <div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Ürün Seç</label>
-<select id="urun" onchange="updatePreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
-<option value="">Önce reyon seçin...</option>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">3. Ürün</label>
+<select id="level-prod" onchange="updatePreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white disabled:opacity-50 disabled:cursor-not-allowed">
+<option value="">Önce kategori seçin</option>
 </select>
 </div>
 
 <!-- FİYATLAR -->
+<div class="grid grid-cols-2 gap-4 pt-2">
+<div>
+<label class="block text-xs text-gray-400 mb-1">Eski Fiyat (₺)</label>
+<input id="price-old" type="number" oninput="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2">
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1">Yeni Fiyat (₺)</label>
+<input id="price-new" type="number" oninput="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2">
+</div>
+</div>
+
+<!-- TARİHLER -->
 <div class="grid grid-cols-2 gap-4">
-<input id="old-price" type="number" placeholder="Eski Fiyat (TL)" oninput="updatePreview()" class="bg-[#1F2937] p-3 rounded border border-gray-700">
-<input id="new-price" type="number" placeholder="Yeni Fiyat (TL)" oninput="updatePreview()" class="bg-[#1F2937] p-3 rounded border border-gray-700">
+<div>
+<label class="block text-xs text-gray-400 mb-1">Başlangıç</label>
+<input id="date-start" type="date" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2 text-white">
+</div>
+<div>
+<label class="block text-xs text-gray-400 mb-1">Bitiş</label>
+<input id="date-end" type="date" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2 text-white">
+</div>
 </div>
 
 <!-- ŞUBELER -->
 <div>
 <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Geçerli Şubeler</label>
-<div id="branches-list" class="bg-[#1F2937] p-4 rounded-xl border border-gray-700 max-h-40 overflow-y-auto">Şubeler yükleniyor...</div>
+<div id="branches-list" class="bg-[#1F2937] p-3 rounded-lg border border-gray-700 max-h-32 overflow-y-auto text-sm">
+Şubeler yükleniyor...
+</div>
 </div>
 
-<button onclick="publishDeal()" id="btn-publish" class="w-full bg-orange-600 hover:bg-orange-500 py-3 rounded-xl font-bold">İndirimi Yayınla</button>
+<button onclick="publishDeal()" id="btn-publish" class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold py-3 rounded-lg transition-all">
+<i class="fa-solid fa-bullhorn mr-2"></i> Kampanyayı Yayınla
+</button>
 </div>
 
-<!-- ÖNİZLEME -->
-<div class="bg-[#111827] p-6 rounded-xl">
-<h2 class="text-lg mb-4">Canlı Önizleme</h2>
-<div id="preview-card" class="hidden bg-gray-900 rounded-2xl overflow-hidden shadow-xl">
-<div class="relative h-48 bg-gray-800">
+<!-- SAĞ: ÖNİZLEME -->
+<div class="space-y-4">
+<h2 class="text-lg font-semibold text-gray-400">Müşteri Nasıl Görür?</h2>
+<div id="preview-empty" class="bg-[#111827] border border-gray-800 rounded-2xl p-8 text-center text-gray-500">
+Ürün seçtiğinizde önizleme burada görünecek
+</div>
+<div id="preview-card" class="hidden bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl max-w-sm">
+<div class="relative h-56 bg-gray-800">
 <img id="p-img" src="" class="w-full h-full object-cover">
-<span id="p-badge" class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">İNDİRİM</span>
+<div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full" id="p-badge">SON 3 GÜN</div>
+<div class="absolute bottom-3 right-3 bg-green-600 text-white text-lg font-bold px-3 py-1 rounded-lg" id="p-discount">-%25</div>
 </div>
 <div class="p-5">
-<h3 id="p-title" class="font-bold text-xl mb-1"></h3>
-<p id="p-cat" class="text-gray-500 text-sm mb-3"></p>
-<div class="flex items-baseline gap-3">
-<span id="p-old" class="text-gray-500 line-through text-lg"></span>
-<span id="p-new" class="text-3xl font-black text-orange-500"></span>
+<div class="text-xs text-orange-400 font-semibold uppercase tracking-wider mb-1" id="p-cat">MANAV</div>
+<h3 id="p-title" class="text-xl font-bold mb-3">Karpuz KG</h3>
+<div class="flex items-baseline gap-3 mb-4">
+<span id="p-old" class="text-gray-500 line-through text-lg">29.90 ₺</span>
+<span id="p-new" class="text-3xl font-black text-orange-500">19.90 ₺</span>
 </div>
-<div class="mt-4 pt-4 border-t border-gray-800 flex justify-between text-sm text-gray-400">
-<span><i class="fa-solid fa-store text-orange-500 mr-1"></i> <span id="p-business">Mansur Gross</span></span>
-<span><i class="fa-solid fa-location-dot mr-1"></i> 800m</span>
+<div class="flex items-center justify-between text-sm text-gray-400 border-t border-gray-800 pt-4">
+<span class="flex items-center gap-2"><i class="fa-solid fa-store text-orange-500"></i> <span id="p-store">Mansur Gross</span></span>
+<span class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> 800m</span>
 </div>
 </div>
 </div>
-<div id="preview-empty" class="text-gray-500 text-center py-12">Ürün seçtiğinizde önizleme burada görünecek...</div>
 </div>
 </div>
 </section>
 
-<section id="tab-ayarlar" class="hidden max-w-md space-y-4">
-<h1 class="text-xl font-bold">Bağlantı Ayarları</h1>
-<input id="cfg-url" placeholder="Supabase URL" class="w-full bg-gray-800 p-3 rounded border border-gray-700">
-<input id="cfg-key" type="password" placeholder="Supabase Anon Key" class="w-full bg-gray-800 p-3 rounded border border-gray-700">
-<button onclick="saveSettings()" class="bg-orange-600 px-6 py-3 rounded font-bold w-full">Bağlantıyı Kaydet</button>
+<section id="tab-list" class="hidden">
+<h1 class="text-2xl font-bold mb-6">Aktif Kampanyalar</h1>
+<div id="active-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+Yükleniyor...
+</div>
 </section>
 </main>
 </div>
 
 <script>
 let client = null;
+const today = new Date().toISOString().split('T')[0];
+document.getElementById('date-start').value = today;
+document.getElementById('date-end').value = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
 
-// KATEGORİ KİTABI (İşletme tipine göre her şey burada)
-const KATALOG = {
-  "gida": {
-    label: "Gıda",
-    alt: {
-      "manav": { label: "Manav", urunler: [
-        {id:"karpuz", ad:"Karpuz (KG)", img:"https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500"},
-        {id:"domates", ad:"Domates (KG)", img:"https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500"},
-        {id:"salatalik", ad:"Salatalık (KG)", img:"https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=500"},
-        {id:"biber", ad:"Biber (KG)", img:"https://images.unsplash.com/photo-1563565375-f3fdf5be05cd?w=500"},
-        {id:"patlican", ad:"Patlıcan (KG)", img:"https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500"}
-      ]},
-      "kasap": { label: "Kasap", urunler: [
-        {id:"kiyma", ad:"Dana Kıyma (KG)", 
+// ÜRÜN KATALOĞU
+const catalog = {
+gida: {
+manav: [
+{ name: "Karpuz (KG)", img: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500" },
+{ name: "Domates (KG)", img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500" },
+{ name: "Salatalık (KG)", img: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=500" },
+{ name: "Muz Anamur (KG)", img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500" },
+{ name: "Elma (KG)", img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500" },
+{ name: "Portakal (KG)", img: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=500" }
+],
+kasap: [
+{ name: "Dana Kıyma (KG)", img: "https://images.unsplash.com/photo-1607623814075-e51df1ce032c?w=500" },
+{ name: "Tavuk But (KG)", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500" },
+{ name: "Köfte (KG)", img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=500" }
+],
+sut: [
+{ name: "Tam Yağlı Süt (1L)", img: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500" },
+{ name: "Beyaz Peynir (KG)", img: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=500" },
+{ name: "Yoğurt (3KG)", img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500" }
+],
+bakliyat: [
+{ name: "Pirinç (KG)", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500" },
+{ name: "Bulgur (KG)", img: "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=500" },
+{ name: "Nohut (KG)", img: "https://images.unsplash.com/photo-1515543904379-3d757afe72e3?w=500" }
+],
+cay: [
+{ name: "Siyah Çay (1KG)", img: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=500" },
+{ name: "Filtre Kahve (250g)", img: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500" }
+]
+},
+gidadisi: {
+temizlik: [
+{ name: "Bulaşık Deterjanı", img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=500" },
+{ name: "Çamaşır Suyu", img: "https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=500" }
+],
+kisisel: [
+{ name: "Şampuan", img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500" },
+{ name: "Diş Macunu", img: "https://images.unsplash.com/photo-1559671088-292d6132e57c?w=500" }
+]
+}
+};
+
+function switchTab(tab) {
+document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+document.getElementById('tab-' + tab).classList.remove('hidden');
+if(tab === 'list') loadActiveDeals();
+}
+
+function showSettings() {
+alert('Ayarlar için localStorage temizlenmeli. Console: localStorage.clear()');
+}
+
+function updateCategories() {
+const type = document.getElementById('level-type').value;
+const catSelect = document.getElementById('level-cat');
+const prodSelect = document.getElementById('level-prod');
+catSelect.innerHTML = '<option value="">Kategori seçin</option>';
+prodSelect.innerHTML = '<option value="">Önce kategori seçin</option>';
+prodSelect.disabled = true;
+
+if (!type || !catalog[type]) {
+catSelect.disabled = true;
+return;
+}
+
+const categories = Object.keys(catalog[type]);
+categories.forEach(cat => {
+const option = document.createElement('option');
+option.value = cat;
+option.text = cat.charAt(0).toUpperCase() + cat.slice(1);
+catSelect.appendChild(option);
+});
+catSelect.disabled = false;
+}
+
+function updateProducts() {
+const type = document.getElementById('level-type').value;
+const cat = document.getElementById('level-cat').value;
+const prodSelect = document.getElementById('level-prod');
+prodSelect.innerHTML = '<option value="">Ürün seçin</option>';
+
+if (!type || !cat || !catalog[type][cat]) {
+prodSelect.disabled = true;
+return;
+}
+
+catalog[type][cat].forEach((prod, idx) => {
+const option = document.createElement('option');
+option.value = idx;
+option.text = prod.name;
+prodSelect.appendChild(option);
+});
+prodSelect.disabled = false;
+}
+
+function updatePreview() {
+const type = document.getElementById('level-type').value;
+const cat = document.getElementById('level-cat').value;
+const prodIdx = document.getElementById('level-prod').value;
+const oldPrice = parseFloat(document.getElementById('price-old').value) || 0;
+const newPrice = parseFloat(document.getElementById('price-new').value) || 0;
+
+if (!type || !cat || prodIdx === "") {
+document.getElementById('preview-card').classList.add('hidden');
+document.getElementById('preview-empty').classList.remove('hidden');
+return;
+}
+
+const product = catalog[type][cat][prodIdx];
+const discount = oldPrice > 0 ? Math.round(((oldPrice - newPrice) / oldPrice) * 100) : 0;
+
+document.getElementById('p-img').src = product.img;
+document.getElementById('p-cat').innerText = cat.toUpperCase();
+document.getElementById('p-title').innerText = product.name;
+document.getElementById('p-old').innerText = oldPrice.toFixed(2) + ' ₺';
+document.getElementById('p-new').innerText = newPrice.toFixed(2) + ' ₺';
+document.getElementById('p-discount').innerText = discount > 0 ? '-%' + discount : '%0';
+document.getElementById('p-discount').className = discount > 0 ? 'absolute bottom-3 right-3 bg-green-600 text-white text-lg font-bold px-3 py-1 rounded-lg' : 'absolute bottom-3 right-3 bg-gray-600 text-white text-lg font-bold px-3 py-1 rounded-lg';
+
+document.getElementById('preview-empty').classList.add('hidden');
+document.getElementById('preview-card').classList.remove('hidden');
+}
+
+async function loadBranches() {
+if (!client) return;
+const { data, error } = await client.from('branches').select('id,name');
+const list = document.getElementById('branches-list');
+list.innerHTML = '';
+if (error || !data || data.length === 0) {
+list.innerHTML = '<span class="text-red-400">Şube bulunamadı. Önce Supabase\'e şube ekleyin.</span>';
+return;
+}
+data.forEach(b => {
+list.innerHTML += `<label class="flex items-center gap-2 mb-2 cursor-pointer hover:text-white"><input type="checkbox" value="${b.id}" class="accent-orange-500 w-4 h-4"> ${b.name}</label>`;
+});
+}
+
+async function publishDeal() {
+if (!client) { alert("Bağlantı ayarları eksik!"); return; }
+
+const type = document.getElementById('level-type').value;
+const cat = document.getElementById('level-cat').value;
+const prodIdx = document.getElementById('level-prod').value;
+const oldPrice = parseFloat(document.getElementById('price-old').value);
+const newPrice = parseFloat(document.getElementById('price-new').value);
+const startDate = document.getElementById('date-start').value;
+const endDate = document.getElementById('date-end').value;
+const checked = Array.from(document.querySelectorAll('#branches-list input:checked')).map(x => x.value);
+
+if (!type || !cat || prodIdx === "" || !oldPrice || !newPrice || checked.length === 0) {
+alert("Tüm alanları doldurun ve şube seçin!");
+return;
+}
+
+const product = catalog[type][cat][prodIdx];
+const { data: business } = await client.from('businesses').select('id').limit(1).single();
+if (!business) { alert("Veritabanında işletme yok!"); return; }
+
+const { data: deal, error } = await client.from('deals').insert({
+business_id: business.id,
+title: product.name,
+old_price: oldPrice,
+new_price: newPrice,
+image_url: product.img,
+start_date: startDate,
+end_date: endDate,
+active: true
+}).select().single();
+
+if (error) { alert("Hata: " + error.message); return; }
+
+await client.from('deal_branches').insert(checked.map(id => ({ deal_id: deal.id, branch_id: id })));
+alert("✅ Kampanya yayınlandı: " + product.name);
+location.reload();
+}
+
+async function loadActiveDeals() {
+if(!client) return;
+const { data, error } = await client.from('deals').select('*, deal_branches(branch_id)').eq('active', true).order('created_at', {ascending: false});
+const container = document.getElementById('active-deals');
+if(error || !data || data.length === 0) {
+container.innerHTML = '<p class="text-gray-500">Aktif kampanya yok.</p>';
+return;
+}
+container.innerHTML = data.map(d => `
+<div class="bg-[#111827] p-4 rounded-xl border border-gray-800">
+<img src="${d.image_url}" class="w-full h-32 object-cover rounded-lg mb-3">
+<h3 class="font-bold">${d.title}</h3>
+<p class="text-orange-500 font-bold">${d.new_price} ₺ <span class="text-gray-500 line-through text-sm">${d.old_price} ₺</span></p>
+<p class="text-xs text-gray-400 mt-2">${d.start_date?.split('T')[0]} - ${d.end_date?.split('T')[0]}</p>
+</div>
+`).join('');
+}
+
+function initSupabase() {
+const url = localStorage.getItem('gerox_url');
+const key = localStorage.getItem('gerox_key');
+if (!url || !key) {
+document.getElementById('setup-warning').classList.remove('hidden');
+return;
+}
+document.getElementById('setup-warning').classList.add('hidden');
+const { createClient } = window.supabase;
+client = createClient(url, key);
+loadBranches();
+}
+
+window.onload = initSupabase;
+</script>
+</body>
+</html>
