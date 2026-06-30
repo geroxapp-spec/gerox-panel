@@ -1,347 +1,1085 @@
 <!DOCTYPE html>
 <html lang="tr">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerox - Mağaza Paneli</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gerox - Mağaza Paneli</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-[#0B0F19] text-gray-200 min-h-screen font-sans">
-<div class="flex">
-<aside class="w-64 bg-[#111827] min-h-screen p-6 border-r border-gray-800">
-<div class="text-2xl font-black text-orange-500 mb-8">Gerox</div>
-<nav class="space-y-3">
-<button onclick="switchTab('dashboard')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">Yeni İndirim</button>
-<button onclick="switchTab('list')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">Aktif İndirimler</button>
-</nav>
-</aside>
-<main class="flex-1 p-8">
-<section id="tab-dashboard">
-<h1 class="text-2xl font-bold mb-6">Kampanya Oluştur</h1>
-<div id="setup-warning" class="hidden bg-yellow-900/40 border border-yellow-500 p-4 rounded mb-6 text-yellow-200">Önce bağlantı ayarlarını yapmalısın. <button onclick="showSettings()" class="underline font-bold ml-2">Ayarlar</button></div>
 
-<div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-<!-- SOL: FORM -->
-<div class="bg-[#111827] p-6 rounded-xl space-y-4 border border-gray-800">
+<div class="flex min-h-screen">
 
-<!-- SEVİYE 1: ANA TÜR -->
-<div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">1. Ana Tür</label>
-<select id="level-type" onchange="updateCategories()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white">
-<option value="">Seçin...</option>
-<option value="gida">🍎 Gıda</option>
-<option value="gidadisi">🧴 Gıda Dışı</option>
-</select>
-</div>
+  <!-- SOL MENÜ -->
+  <aside class="w-72 bg-[#111827] border-r border-gray-800 p-6 flex flex-col">
+    <div>
+      <div class="flex items-center gap-3 mb-8">
+        <div class="text-3xl font-black text-orange-500">Gerox</div>
+      </div>
 
-<!-- SEVİYE 2: KATEGORİ -->
-<div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">2. Kategori</label>
-<select id="level-cat" onchange="updateProducts()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-<option value="">Önce tür seçin</option>
-</select>
-</div>
+      <div class="bg-[#0F172A] border border-gray-800 rounded-2xl p-4 mb-6">
+        <div class="text-sm text-gray-400 mb-1">Aktif İşletme</div>
+        <div id="sidebar-business-name" class="font-bold text-lg">Yükleniyor...</div>
+        <div id="sidebar-branch-count" class="text-xs text-gray-500 mt-1">Şubeler yükleniyor...</div>
+      </div>
 
-<!-- SEVİYE 3: ÜRÜN -->
-<div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">3. Ürün</label>
-<select id="level-prod" onchange="updatePreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-3 text-white disabled:opacity-50 disabled:cursor-not-allowed">
-<option value="">Önce kategori seçin</option>
-</select>
-</div>
+      <nav class="space-y-2">
+        <button data-tab="home" class="menu-btn w-full text-left px-4 py-3 rounded-xl bg-orange-600 text-white flex items-center gap-3" onclick="switchTab('home')">
+          <i class="fa-solid fa-house"></i> <span>Özet</span>
+        </button>
 
-<!-- FİYATLAR -->
-<div class="grid grid-cols-2 gap-4 pt-2">
-<div>
-<label class="block text-xs text-gray-400 mb-1">Eski Fiyat (₺)</label>
-<input id="price-old" type="number" oninput="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2">
-</div>
-<div>
-<label class="block text-xs text-gray-400 mb-1">Yeni Fiyat (₺)</label>
-<input id="price-new" type="number" oninput="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2">
-</div>
-</div>
+        <button data-tab="create" class="menu-btn w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 flex items-center gap-3" onclick="switchTab('create')">
+          <i class="fa-solid fa-bullhorn"></i> <span>Yeni Kampanya</span>
+        </button>
 
-<!-- TARİHLER -->
-<div class="grid grid-cols-2 gap-4">
-<div>
-<label class="block text-xs text-gray-400 mb-1">Başlangıç</label>
-<input id="date-start" type="date" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2 text-white">
-</div>
-<div>
-<label class="block text-xs text-gray-400 mb-1">Bitiş</label>
-<input id="date-end" type="date" class="w-full bg-[#1F2937] border border-gray-700 rounded-lg px-4 py-2 text-white">
-</div>
-</div>
+        <button data-tab="active" class="menu-btn w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 flex items-center gap-3" onclick="switchTab('active')">
+          <i class="fa-solid fa-fire"></i> <span>Aktif Kampanyalar</span>
+        </button>
 
-<!-- ŞUBELER -->
-<div>
-<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Geçerli Şubeler</label>
-<div id="branches-list" class="bg-[#1F2937] p-3 rounded-lg border border-gray-700 max-h-32 overflow-y-auto text-sm">
-Şubeler yükleniyor...
-</div>
-</div>
+        <button data-tab="history" class="menu-btn w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 flex items-center gap-3" onclick="switchTab('history')">
+          <i class="fa-solid fa-clock-rotate-left"></i> <span>Geçmiş Kampanyalar</span>
+        </button>
 
-<button onclick="publishDeal()" id="btn-publish" class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold py-3 rounded-lg transition-all">
-<i class="fa-solid fa-bullhorn mr-2"></i> Kampanyayı Yayınla
-</button>
-</div>
+        <button data-tab="settings" class="menu-btn w-full text-left px-4 py-3 rounded-xl text-gray-300 hover:bg-gray-800 flex items-center gap-3" onclick="switchTab('settings')">
+          <i class="fa-solid fa-gear"></i> <span>Ayarlar</span>
+        </button>
+      </nav>
+    </div>
 
-<!-- SAĞ: ÖNİZLEME -->
-<div class="space-y-4">
-<h2 class="text-lg font-semibold text-gray-400">Müşteri Nasıl Görür?</h2>
-<div id="preview-empty" class="bg-[#111827] border border-gray-800 rounded-2xl p-8 text-center text-gray-500">
-Ürün seçtiğinizde önizleme burada görünecek
-</div>
-<div id="preview-card" class="hidden bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden shadow-2xl max-w-sm">
-<div class="relative h-56 bg-gray-800">
-<img id="p-img" src="" class="w-full h-full object-cover">
-<div class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full" id="p-badge">SON 3 GÜN</div>
-<div class="absolute bottom-3 right-3 bg-green-600 text-white text-lg font-bold px-3 py-1 rounded-lg" id="p-discount">-%25</div>
-</div>
-<div class="p-5">
-<div class="text-xs text-orange-400 font-semibold uppercase tracking-wider mb-1" id="p-cat">MANAV</div>
-<h3 id="p-title" class="text-xl font-bold mb-3">Karpuz KG</h3>
-<div class="flex items-baseline gap-3 mb-4">
-<span id="p-old" class="text-gray-500 line-through text-lg">29.90 ₺</span>
-<span id="p-new" class="text-3xl font-black text-orange-500">19.90 ₺</span>
-</div>
-<div class="flex items-center justify-between text-sm text-gray-400 border-t border-gray-800 pt-4">
-<span class="flex items-center gap-2"><i class="fa-solid fa-store text-orange-500"></i> <span id="p-store">Mansur Gross</span></span>
-<span class="flex items-center gap-2"><i class="fa-solid fa-location-dot"></i> 800m</span>
-</div>
-</div>
-</div>
-</div>
-</div>
-</section>
+    <div class="mt-auto pt-6 text-xs text-gray-500 border-t border-gray-800">
+      Gerox Panel v2.0<br>
+      Usta & Çırak yapımı 🛠️
+    </div>
+  </aside>
 
-<section id="tab-list" class="hidden">
-<h1 class="text-2xl font-bold mb-6">Aktif Kampanyalar</h1>
-<div id="active-deals" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-Yükleniyor...
-</div>
-</section>
-</main>
+  <!-- SAĞ İÇERİK -->
+  <main class="flex-1 p-8">
+
+    <!-- ÖZET -->
+    <section id="tab-home" class="space-y-6">
+      <div>
+        <h1 class="text-3xl font-bold">Panel Özeti</h1>
+        <p class="text-gray-400 mt-1">Bugünkü kampanya durumunu buradan takip et.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5">
+          <div class="text-sm text-gray-400">Aktif Kampanya</div>
+          <div id="stat-active" class="text-3xl font-black mt-2 text-orange-500">0</div>
+        </div>
+
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5">
+          <div class="text-sm text-gray-400">Geçmiş Kampanya</div>
+          <div id="stat-history" class="text-3xl font-black mt-2">0</div>
+        </div>
+
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5">
+          <div class="text-sm text-gray-400">Toplam Şube</div>
+          <div id="stat-branches" class="text-3xl font-black mt-2">0</div>
+        </div>
+
+        <div class="bg-[#111827] border border-gray-800 rounded-2xl p-5">
+          <div class="text-sm text-gray-400">Son Yayınlanan</div>
+          <div id="stat-last" class="text-lg font-bold mt-2">-</div>
+        </div>
+      </div>
+
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6">
+        <h2 class="text-lg font-semibold mb-4">Hızlı Aksiyonlar</h2>
+        <div class="flex flex-wrap gap-3">
+          <button onclick="switchTab('create')" class="bg-orange-600 hover:bg-orange-500 px-5 py-3 rounded-xl font-semibold">
+            <i class="fa-solid fa-plus mr-2"></i> Yeni Kampanya Oluştur
+          </button>
+          <button onclick="switchTab('active')" class="bg-gray-800 hover:bg-gray-700 px-5 py-3 rounded-xl font-semibold">
+            <i class="fa-solid fa-image mr-2"></i> Aktif Kampanyaları Yönet
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- YENİ KAMPANYA -->
+    <section id="tab-create" class="hidden space-y-6">
+      <div>
+        <h1 class="text-3xl font-bold">Yeni Kampanya</h1>
+        <p class="text-gray-400 mt-1">Kategori seç, fiyatı gir, tarihi belirle ve yayına al.</p>
+      </div>
+
+      <div id="setup-warning" class="hidden bg-yellow-900/30 border border-yellow-500/50 rounded-xl p-4 text-yellow-200">
+        Önce bağlantı ayarlarını yapmalısın.
+      </div>
+
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
+        <!-- FORM -->
+        <div class="xl:col-span-7 bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-5">
+
+          <h2 class="text-xl font-semibold border-b border-gray-800 pb-3">Kampanya Bilgileri</h2>
+
+          <!-- ANA TÜR -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">1. Ana Tür</label>
+            <select id="level-type" onchange="updateCategories(); updatePreview();" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+              <option value="">Seçin...</option>
+              <option value="gida">Gıda</option>
+              <option value="gidadisi">Gıda Dışı</option>
+            </select>
+          </div>
+
+          <!-- KATEGORİ -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">2. Kategori</label>
+            <select id="level-cat" onchange="updateProducts(); updatePreview();" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
+              <option value="">Önce ana tür seçin</option>
+            </select>
+          </div>
+
+          <!-- ÜRÜN -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">3. Ürün</label>
+            <select id="level-prod" onchange="updatePreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
+              <option value="">Önce kategori seçin</option>
+            </select>
+          </div>
+
+          <!-- FİYATLAR -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-gray-400 mb-2">Eski Fiyat</label>
+              <input id="price-old" type="number" oninput="updatePreview()" placeholder="29.95" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-2">Yeni Fiyat</label>
+              <input id="price-new" type="number" oninput="updatePreview()" placeholder="19.95" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+            </div>
+          </div>
+
+          <!-- TARİHLER -->
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs text-gray-400 mb-2">Başlangıç Tarihi</label>
+              <input id="date-start" type="date" onchange="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+            </div>
+            <div>
+              <label class="block text-xs text-gray-400 mb-2">Bitiş Tarihi</label>
+              <input id="date-end" type="date" onchange="updatePreview()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+            </div>
+          </div>
+
+          <!-- ŞUBELER -->
+          <div>
+            <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">Geçerli Şubeler</label>
+            <div id="branches-list" class="bg-[#1F2937] border border-gray-700 rounded-xl p-4 max-h-40 overflow-y-auto text-sm">
+              Şubeler yükleniyor...
+            </div>
+          </div>
+
+          <button onclick="publishDeal()" id="btn-publish" class="w-full bg-gradient-to-r from-orange-600 to-orange-500 hover:from-orange-500 hover:to-orange-400 text-white font-bold py-4 rounded-xl transition-all">
+            <i class="fa-solid fa-paper-plane mr-2"></i> Kampanyayı Yayınla
+          </button>
+        </div>
+
+        <!-- ÖNİZLEME -->
+        <div class="xl:col-span-5 space-y-4">
+          <h2 class="text-lg font-semibold text-gray-400">Canlı Önizleme</h2>
+
+          <div id="preview-empty" class="bg-[#111827] border border-gray-800 rounded-2xl p-10 text-center text-gray-500">
+            Ürün ve fiyat girildiğinde önizleme burada oluşacak.
+          </div>
+
+          <div id="preview-card" class="hidden bg-[#111827] border border-gray-800 rounded-3xl overflow-hidden shadow-2xl">
+            <div class="relative h-64 bg-black">
+              <img id="p-img" src="" class="w-full h-full object-cover">
+              <div class="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20"></div>
+
+              <div id="p-date" class="absolute top-4 left-4 bg-black/80 border border-orange-500 text-orange-400 text-xs font-bold px-4 py-2 rounded-full">
+                01–12 TEMMUZ 2026
+              </div>
+
+              <div id="p-discount" class="absolute top-4 right-4 bg-black/80 border border-orange-500 text-white text-sm font-black px-4 py-2 rounded-full">
+                -%20
+              </div>
+            </div>
+
+            <div class="p-6">
+              <div id="p-cat" class="text-xs uppercase tracking-[0.25em] text-orange-400 font-bold mb-2">MANAV</div>
+              <h3 id="p-title" class="text-3xl font-black mb-4">Karpuz (KG)</h3>
+
+              <div class="flex items-end justify-between gap-4">
+                <div>
+                  <div id="p-old" class="text-gray-500 line-through text-xl">24,95 ₺</div>
+                  <div id="p-new" class="text-5xl font-black text-orange-500 leading-none">19,95 ₺</div>
+                </div>
+              </div>
+
+              <div class="mt-5 pt-4 border-t border-gray-800 flex items-center justify-between text-sm text-gray-400">
+                <div>
+                  <div id="p-store" class="font-semibold text-white">Mansur Gross</div>
+                  <div id="p-branch-label">Seçili şubelerde geçerli</div>
+                </div>
+                <div class="text-xs text-orange-400 font-bold">INSTAGRAM POST HAZIR</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- AKTİF KAMPANYALAR -->
+    <section id="tab-active" class="hidden space-y-6">
+      <div>
+        <h1 class="text-3xl font-bold">Aktif Kampanyalar</h1>
+        <p class="text-gray-400 mt-1">Buradan kampanyayı indir, durdur veya kontrol et.</p>
+      </div>
+
+      <div id="active-deals" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        Yükleniyor...
+      </div>
+    </section>
+
+    <!-- GEÇMİŞ -->
+    <section id="tab-history" class="hidden space-y-6">
+      <div>
+        <h1 class="text-3xl font-bold">Geçmiş Kampanyalar</h1>
+        <p class="text-gray-400 mt-1">Süresi biten veya durdurulan kampanyalar burada görünür.</p>
+      </div>
+
+      <div id="history-deals" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        Yükleniyor...
+      </div>
+    </section>
+
+    <!-- AYARLAR -->
+    <section id="tab-settings" class="hidden space-y-6 max-w-2xl">
+      <div>
+        <h1 class="text-3xl font-bold">Ayarlar</h1>
+        <p class="text-gray-400 mt-1">Bağlantı ve panel ayarlarını buradan yönet.</p>
+      </div>
+
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl p-6 space-y-4">
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">Supabase URL</label>
+          <input id="cfg-url" type="text" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+        </div>
+
+        <div>
+          <label class="block text-xs uppercase tracking-wider text-gray-400 mb-2 font-semibold">Supabase Anon Key</label>
+          <input id="cfg-key" type="password" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3">
+        </div>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button onclick="saveSettings()" class="bg-orange-600 hover:bg-orange-500 px-5 py-3 rounded-xl font-semibold">
+            Kaydet
+          </button>
+
+          <button onclick="reloadAllData()" class="bg-gray-800 hover:bg-gray-700 px-5 py-3 rounded-xl font-semibold">
+            Veriyi Yenile
+          </button>
+
+          <button onclick="clearLocalSettings()" class="bg-red-600 hover:bg-red-500 px-5 py-3 rounded-xl font-semibold">
+            Tarayıcı Verisini Temizle
+          </button>
+        </div>
+
+        <div class="pt-4 border-t border-gray-800 text-sm text-gray-400">
+          <div><strong class="text-white">İşletme:</strong> <span id="settings-business-name">-</span></div>
+          <div class="mt-1"><strong class="text-white">Not:</strong> Instagram postlarında kampanya tarihi otomatik gösterilir.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <script>
-let client = null;
-const today = new Date().toISOString().split('T')[0];
-document.getElementById('date-start').value = today;
-document.getElementById('date-end').value = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+  let client = null;
+  let currentBusiness = null;
+  let branchesCache = [];
+  let activeDealsCache = [];
+  let historyDealsCache = [];
+  let dealMap = {};
 
-// ÜRÜN KATALOĞU
-const catalog = {
-gida: {
-manav: [
-{ name: "Karpuz (KG)", img: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500" },
-{ name: "Domates (KG)", img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500" },
-{ name: "Salatalık (KG)", img: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=500" },
-{ name: "Muz Anamur (KG)", img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=500" },
-{ name: "Elma (KG)", img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=500" },
-{ name: "Portakal (KG)", img: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=500" }
-],
-kasap: [
-{ name: "Dana Kıyma (KG)", img: "https://images.unsplash.com/photo-1607623814075-e51df1ce032c?w=500" },
-{ name: "Tavuk But (KG)", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500" },
-{ name: "Köfte (KG)", img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=500" }
-],
-sut: [
-{ name: "Tam Yağlı Süt (1L)", img: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=500" },
-{ name: "Beyaz Peynir (KG)", img: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=500" },
-{ name: "Yoğurt (3KG)", img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=500" }
-],
-bakliyat: [
-{ name: "Pirinç (KG)", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=500" },
-{ name: "Bulgur (KG)", img: "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=500" },
-{ name: "Nohut (KG)", img: "https://images.unsplash.com/photo-1515543904379-3d757afe72e3?w=500" }
-],
-cay: [
-{ name: "Siyah Çay (1KG)", img: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=500" },
-{ name: "Filtre Kahve (250g)", img: "https://images.unsplash.com/photo-1559056199-641a0ac8b55e?w=500" }
-]
-},
-gidadisi: {
-temizlik: [
-{ name: "Bulaşık Deterjanı", img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=500" },
-{ name: "Çamaşır Suyu", img: "https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=500" }
-],
-kisisel: [
-{ name: "Şampuan", img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=500" },
-{ name: "Diş Macunu", img: "https://images.unsplash.com/photo-1559671088-292d6132e57c?w=500" }
-]
-}
-};
+  const MONTHS = [
+    "OCAK", "ŞUBAT", "MART", "NİSAN", "MAYIS", "HAZİRAN",
+    "TEMMUZ", "AĞUSTOS", "EYLÜL", "EKİM", "KASIM", "ARALIK"
+  ];
 
-function switchTab(tab) {
-document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
-document.getElementById('tab-' + tab).classList.remove('hidden');
-if(tab === 'list') loadActiveDeals();
-}
+  const catalog = {
+    gida: {
+      manav: [
+        { name: "Karpuz (KG)", img: "https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=1000" },
+        { name: "Domates (KG)", img: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=1000" },
+        { name: "Salatalık (KG)", img: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=1000" },
+        { name: "Muz Anamur (KG)", img: "https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?w=1000" },
+        { name: "Elma (KG)", img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6cbd6?w=1000" },
+        { name: "Portakal (KG)", img: "https://images.unsplash.com/photo-1611080626919-7cf5a9dbab5b?w=1000" }
+      ],
+      kasap: [
+        { name: "Dana Kıyma (KG)", img: "https://images.unsplash.com/photo-1607623814075-e51df1ce032c?w=1000" },
+        { name: "Tavuk But (KG)", img: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=1000" },
+        { name: "Köfte (KG)", img: "https://images.unsplash.com/photo-1529193591184-b1d58069ecdd?w=1000" }
+      ],
+      sut: [
+        { name: "Tam Yağlı Süt (1L)", img: "https://images.unsplash.com/photo-1563636619-e9143da7973b?w=1000" },
+        { name: "Beyaz Peynir (KG)", img: "https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=1000" },
+        { name: "Yoğurt (3KG)", img: "https://images.unsplash.com/photo-1488477181946-6428a0291777?w=1000" }
+      ],
+      bakliyat: [
+        { name: "Pirinç (KG)", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?w=1000" },
+        { name: "Bulgur (KG)", img: "https://images.unsplash.com/photo-1610725664285-7c57e6eeac3f?w=1000" },
+        { name: "Nohut (KG)", img: "https://images.unsplash.com/photo-1515543904379-3d757afe72e3?w=1000" }
+      ],
+      cay: [
+        { name: "Siyah Çay (1KG)", img: "https://images.unsplash.com/photo-1627435601361-ec25f5b1d0e5?w=1000" },
+        { name: "Filtre Kahve (250g)", img: "https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=1000" }
+      ]
+    },
+    gidadisi: {
+      temizlik: [
+        { name: "Bulaşık Deterjanı", img: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=1000" },
+        { name: "Çamaşır Suyu", img: "https://images.unsplash.com/photo-1583947581924-860bda6a26df?w=1000" }
+      ],
+      kisisel: [
+        { name: "Şampuan", img: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=1000" },
+        { name: "Diş Macunu", img: "https://images.unsplash.com/photo-1559671088-292d6132e57c?w=1000" }
+      ]
+    }
+  };
 
-function showSettings() {
-alert('Ayarlar için localStorage temizlenmeli. Console: localStorage.clear()');
-}
+  function setDefaultDates() {
+    const today = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(today.getDate() + 7);
 
-function updateCategories() {
-const type = document.getElementById('level-type').value;
-const catSelect = document.getElementById('level-cat');
-const prodSelect = document.getElementById('level-prod');
-catSelect.innerHTML = '<option value="">Kategori seçin</option>';
-prodSelect.innerHTML = '<option value="">Önce kategori seçin</option>';
-prodSelect.disabled = true;
+    document.getElementById('date-start').value = formatInputDate(today);
+    document.getElementById('date-end').value = formatInputDate(nextWeek);
+  }
 
-if (!type || !catalog[type]) {
-catSelect.disabled = true;
-return;
-}
+  function formatInputDate(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+  }
 
-const categories = Object.keys(catalog[type]);
-categories.forEach(cat => {
-const option = document.createElement('option');
-option.value = cat;
-option.text = cat.charAt(0).toUpperCase() + cat.slice(1);
-catSelect.appendChild(option);
-});
-catSelect.disabled = false;
-}
+  function normalizeDateOnly(value) {
+    if (!value) return null;
+    return String(value).split('T')[0];
+  }
 
-function updateProducts() {
-const type = document.getElementById('level-type').value;
-const cat = document.getElementById('level-cat').value;
-const prodSelect = document.getElementById('level-prod');
-prodSelect.innerHTML = '<option value="">Ürün seçin</option>';
+  function parseDateSafe(value) {
+    const clean = normalizeDateOnly(value);
+    if (!clean) return null;
+    return new Date(clean + 'T12:00:00');
+  }
 
-if (!type || !cat || !catalog[type][cat]) {
-prodSelect.disabled = true;
-return;
-}
+  function formatDateRange(startValue, endValue) {
+    const start = parseDateSafe(startValue);
+    const end = parseDateSafe(endValue);
 
-catalog[type][cat].forEach((prod, idx) => {
-const option = document.createElement('option');
-option.value = idx;
-option.text = prod.name;
-prodSelect.appendChild(option);
-});
-prodSelect.disabled = false;
-}
+    if (!start || !end) return "TARİH YOK";
 
-function updatePreview() {
-const type = document.getElementById('level-type').value;
-const cat = document.getElementById('level-cat').value;
-const prodIdx = document.getElementById('level-prod').value;
-const oldPrice = parseFloat(document.getElementById('price-old').value) || 0;
-const newPrice = parseFloat(document.getElementById('price-new').value) || 0;
+    const sd = String(start.getDate()).padStart(2, '0');
+    const ed = String(end.getDate()).padStart(2, '0');
+    const sm = MONTHS[start.getMonth()];
+    const em = MONTHS[end.getMonth()];
+    const sy = start.getFullYear();
+    const ey = end.getFullYear();
 
-if (!type || !cat || prodIdx === "") {
-document.getElementById('preview-card').classList.add('hidden');
-document.getElementById('preview-empty').classList.remove('hidden');
-return;
-}
+    if (sy === ey && start.getMonth() === end.getMonth()) {
+      return `${sd}–${ed} ${sm} ${sy}`;
+    }
 
-const product = catalog[type][cat][prodIdx];
-const discount = oldPrice > 0 ? Math.round(((oldPrice - newPrice) / oldPrice) * 100) : 0;
+    if (sy === ey) {
+      return `${sd} ${sm} – ${ed} ${em} ${sy}`;
+    }
 
-document.getElementById('p-img').src = product.img;
-document.getElementById('p-cat').innerText = cat.toUpperCase();
-document.getElementById('p-title').innerText = product.name;
-document.getElementById('p-old').innerText = oldPrice.toFixed(2) + ' ₺';
-document.getElementById('p-new').innerText = newPrice.toFixed(2) + ' ₺';
-document.getElementById('p-discount').innerText = discount > 0 ? '-%' + discount : '%0';
-document.getElementById('p-discount').className = discount > 0 ? 'absolute bottom-3 right-3 bg-green-600 text-white text-lg font-bold px-3 py-1 rounded-lg' : 'absolute bottom-3 right-3 bg-gray-600 text-white text-lg font-bold px-3 py-1 rounded-lg';
+    return `${sd} ${sm} ${sy} – ${ed} ${em} ${ey}`;
+  }
 
-document.getElementById('preview-empty').classList.add('hidden');
-document.getElementById('preview-card').classList.remove('hidden');
-}
+  function formatCurrency(value) {
+    const num = Number(value || 0);
+    return num.toLocaleString('tr-TR', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }) + " ₺";
+  }
 
-async function loadBranches() {
-if (!client) return;
-const { data, error } = await client.from('branches').select('id,name');
-const list = document.getElementById('branches-list');
-list.innerHTML = '';
-if (error || !data || data.length === 0) {
-list.innerHTML = '<span class="text-red-400">Şube bulunamadı. Önce Supabase\'e şube ekleyin.</span>';
-return;
-}
-data.forEach(b => {
-list.innerHTML += `<label class="flex items-center gap-2 mb-2 cursor-pointer hover:text-white"><input type="checkbox" value="${b.id}" class="accent-orange-500 w-4 h-4"> ${b.name}</label>`;
-});
-}
+  function capitalizeTR(text) {
+    if (!text) return "";
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
 
-async function publishDeal() {
-if (!client) { alert("Bağlantı ayarları eksik!"); return; }
+  function switchTab(tab) {
+    document.querySelectorAll('main section').forEach(sec => sec.classList.add('hidden'));
+    document.getElementById('tab-' + tab).classList.remove('hidden');
 
-const type = document.getElementById('level-type').value;
-const cat = document.getElementById('level-cat').value;
-const prodIdx = document.getElementById('level-prod').value;
-const oldPrice = parseFloat(document.getElementById('price-old').value);
-const newPrice = parseFloat(document.getElementById('price-new').value);
-const startDate = document.getElementById('date-start').value;
-const endDate = document.getElementById('date-end').value;
-const checked = Array.from(document.querySelectorAll('#branches-list input:checked')).map(x => x.value);
+    document.querySelectorAll('.menu-btn').forEach(btn => {
+      btn.classList.remove('bg-orange-600', 'text-white');
+      btn.classList.add('text-gray-300');
+    });
 
-if (!type || !cat || prodIdx === "" || !oldPrice || !newPrice || checked.length === 0) {
-alert("Tüm alanları doldurun ve şube seçin!");
-return;
-}
+    const activeBtn = document.querySelector(`[data-tab="${tab}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add('bg-orange-600', 'text-white');
+      activeBtn.classList.remove('text-gray-300');
+    }
 
-const product = catalog[type][cat][prodIdx];
-const { data: business } = await client.from('businesses').select('id').limit(1).single();
-if (!business) { alert("Veritabanında işletme yok!"); return; }
+    if (tab === 'active') loadActiveDeals();
+    if (tab === 'history') loadHistoryDeals();
+    if (tab === 'home') loadOverview();
+  }
 
-const { data: deal, error } = await client.from('deals').insert({
-business_id: business.id,
-title: product.name,
-old_price: oldPrice,
-new_price: newPrice,
-image_url: product.img,
-start_date: startDate,
-end_date: endDate,
-active: true
-}).select().single();
+  function saveSettings() {
+    localStorage.setItem('gerox_url', document.getElementById('cfg-url').value.trim());
+    localStorage.setItem('gerox_key', document.getElementById('cfg-key').value.trim());
+    initSupabase();
+    alert('Bağlantı ayarları kaydedildi.');
+    switchTab('home');
+  }
 
-if (error) { alert("Hata: " + error.message); return; }
+  function clearLocalSettings() {
+    if (!confirm('Tarayıcıya kaydedilmiş bağlantı bilgileri temizlensin mi?')) return;
+    localStorage.removeItem('gerox_url');
+    localStorage.removeItem('gerox_key');
+    alert('Temizlendi. Sayfa yenileniyor.');
+    location.reload();
+  }
 
-await client.from('deal_branches').insert(checked.map(id => ({ deal_id: deal.id, branch_id: id })));
-alert("✅ Kampanya yayınlandı: " + product.name);
-location.reload();
-}
+  async function initSupabase() {
+    const url = localStorage.getItem('gerox_url');
+    const key = localStorage.getItem('gerox_key');
 
-async function loadActiveDeals() {
-if(!client) return;
-const { data, error } = await client.from('deals').select('*, deal_branches(branch_id)').eq('active', true).order('created_at', {ascending: false});
-const container = document.getElementById('active-deals');
-if(error || !data || data.length === 0) {
-container.innerHTML = '<p class="text-gray-500">Aktif kampanya yok.</p>';
-return;
-}
-container.innerHTML = data.map(d => `
-<div class="bg-[#111827] p-4 rounded-xl border border-gray-800">
-<img src="${d.image_url}" class="w-full h-32 object-cover rounded-lg mb-3">
-<h3 class="font-bold">${d.title}</h3>
-<p class="text-orange-500 font-bold">${d.new_price} ₺ <span class="text-gray-500 line-through text-sm">${d.old_price} ₺</span></p>
-<p class="text-xs text-gray-400 mt-2">${d.start_date?.split('T')[0]} - ${d.end_date?.split('T')[0]}</p>
-</div>
-`).join('');
-}
+    document.getElementById('cfg-url').value = url || '';
+    document.getElementById('cfg-key').value = key || '';
 
-function initSupabase() {
-const url = localStorage.getItem('gerox_url');
-const key = localStorage.getItem('gerox_key');
-if (!url || !key) {
-document.getElementById('setup-warning').classList.remove('hidden');
-return;
-}
-document.getElementById('setup-warning').classList.add('hidden');
-const { createClient } = window.supabase;
-client = createClient(url, key);
-loadBranches();
-}
+    if (!url || !key) {
+      document.getElementById('setup-warning').classList.remove('hidden');
+      switchTab('settings');
+      return;
+    }
 
-window.onload = initSupabase;
+    document.getElementById('setup-warning').classList.add('hidden');
+
+    const { createClient } = window.supabase;
+    client = createClient(url, key);
+
+    await reloadAllData();
+  }
+
+  async function reloadAllData() {
+    if (!client) return;
+    await autoCloseExpiredDeals();
+    await loadBusiness();
+    await loadBranches();
+    await loadOverview();
+    if (!document.getElementById('tab-active').classList.contains('hidden')) {
+      await loadActiveDeals();
+    }
+    if (!document.getElementById('tab-history').classList.contains('hidden')) {
+      await loadHistoryDeals();
+    }
+  }
+
+  async function autoCloseExpiredDeals() {
+    if (!client) return;
+    const now = new Date().toISOString();
+    await client
+      .from('deals')
+      .update({ active: false })
+      .eq('active', true)
+      .lt('end_date', now);
+  }
+
+  async function loadBusiness() {
+    if (!client) return;
+    const { data, error } = await client
+      .from('businesses')
+      .select('id,name')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single();
+
+    if (!error && data) {
+      currentBusiness = data;
+      document.getElementById('sidebar-business-name').innerText = data.name;
+      document.getElementById('settings-business-name').innerText = data.name;
+      document.getElementById('p-store').innerText = data.name;
+    } else {
+      currentBusiness = null;
+      document.getElementById('sidebar-business-name').innerText = 'İşletme bulunamadı';
+      document.getElementById('settings-business-name').innerText = 'İşletme bulunamadı';
+    }
+  }
+
+  async function loadBranches() {
+    if (!client) return;
+
+    const { data, error } = await client
+      .from('branches')
+      .select('id,name')
+      .order('created_at', { ascending: true });
+
+    const list = document.getElementById('branches-list');
+    list.innerHTML = '';
+
+    if (error || !data) {
+      list.innerHTML = '<div class="text-red-400">Şubeler yüklenemedi.</div>';
+      document.getElementById('sidebar-branch-count').innerText = 'Şube yüklenemedi';
+      return;
+    }
+
+    const uniqueMap = new Map();
+    data.forEach(row => {
+      if (!uniqueMap.has(row.name)) uniqueMap.set(row.name, row);
+    });
+
+    branchesCache = Array.from(uniqueMap.values());
+
+    document.getElementById('sidebar-branch-count').innerText = `${branchesCache.length} şube tanımlı`;
+    document.getElementById('stat-branches').innerText = branchesCache.length;
+
+    if (branchesCache.length === 0) {
+      list.innerHTML = '<div class="text-yellow-300">Şube bulunamadı.</div>';
+      return;
+    }
+
+    branchesCache.forEach(branch => {
+      list.innerHTML += `
+        <label class="flex items-center gap-3 py-2 cursor-pointer hover:text-white">
+          <input type="checkbox" value="${branch.id}" class="accent-orange-500 w-4 h-4">
+          <span>${branch.name}</span>
+        </label>
+      `;
+    });
+  }
+
+  function updateCategories() {
+    const type = document.getElementById('level-type').value;
+    const catSelect = document.getElementById('level-cat');
+    const prodSelect = document.getElementById('level-prod');
+
+    catSelect.innerHTML = '<option value="">Kategori seçin</option>';
+    prodSelect.innerHTML = '<option value="">Önce kategori seçin</option>';
+    prodSelect.disabled = true;
+
+    if (!type || !catalog[type]) {
+      catSelect.disabled = true;
+      return;
+    }
+
+    Object.keys(catalog[type]).forEach(cat => {
+      const option = document.createElement('option');
+      option.value = cat;
+      option.text = capitalizeTR(cat);
+      catSelect.appendChild(option);
+    });
+
+    catSelect.disabled = false;
+  }
+
+  function updateProducts() {
+    const type = document.getElementById('level-type').value;
+    const cat = document.getElementById('level-cat').value;
+    const prodSelect = document.getElementById('level-prod');
+
+    prodSelect.innerHTML = '<option value="">Ürün seçin</option>';
+
+    if (!type || !cat || !catalog[type] || !catalog[type][cat]) {
+      prodSelect.disabled = true;
+      return;
+    }
+
+    catalog[type][cat].forEach((product, index) => {
+      const option = document.createElement('option');
+      option.value = index;
+      option.text = product.name;
+      prodSelect.appendChild(option);
+    });
+
+    prodSelect.disabled = false;
+  }
+
+  function getSelectedProduct() {
+    const type = document.getElementById('level-type').value;
+    const cat = document.getElementById('level-cat').value;
+    const prodIdx = document.getElementById('level-prod').value;
+
+    if (!type || !cat || prodIdx === "") return null;
+    if (!catalog[type] || !catalog[type][cat]) return null;
+
+    return {
+      type,
+      category: cat,
+      ...catalog[type][cat][prodIdx]
+    };
+  }
+
+  function updatePreview() {
+    const product = getSelectedProduct();
+    const oldPrice = parseFloat(document.getElementById('price-old').value) || 0;
+    const newPrice = parseFloat(document.getElementById('price-new').value) || 0;
+    const startDate = document.getElementById('date-start').value;
+    const endDate = document.getElementById('date-end').value;
+
+    if (!product) {
+      document.getElementById('preview-card').classList.add('hidden');
+      document.getElementById('preview-empty').classList.remove('hidden');
+      return;
+    }
+
+    const discount = oldPrice > 0 ? Math.round(((oldPrice - newPrice) / oldPrice) * 100) : 0;
+
+    document.getElementById('p-img').src = product.img;
+    document.getElementById('p-cat').innerText = capitalizeTR(product.category).toUpperCase();
+    document.getElementById('p-title').innerText = product.name;
+    document.getElementById('p-old').innerText = formatCurrency(oldPrice);
+    document.getElementById('p-new').innerText = formatCurrency(newPrice);
+    document.getElementById('p-discount').innerText = discount > 0 ? `-%${discount}` : `%0`;
+    document.getElementById('p-date').innerText = formatDateRange(startDate, endDate);
+
+    const selectedBranchCount = document.querySelectorAll('#branches-list input:checked').length;
+    document.getElementById('p-branch-label').innerText = selectedBranchCount > 0
+      ? `${selectedBranchCount} şubede geçerli`
+      : 'Seçili şubelerde geçerli';
+
+    document.getElementById('preview-empty').classList.add('hidden');
+    document.getElementById('preview-card').classList.remove('hidden');
+  }
+
+  async function publishDeal() {
+    if (!client) {
+      alert("Bağlantı ayarları eksik.");
+      return;
+    }
+
+    const product = getSelectedProduct();
+    const oldPrice = parseFloat(document.getElementById('price-old').value);
+    const newPrice = parseFloat(document.getElementById('price-new').value);
+    const startDate = document.getElementById('date-start').value;
+    const endDate = document.getElementById('date-end').value;
+    const checkedBranches = Array.from(document.querySelectorAll('#branches-list input:checked')).map(x => x.value);
+
+    if (!currentBusiness) {
+      alert("İşletme bilgisi bulunamadı.");
+      return;
+    }
+
+    if (!product || !oldPrice || !newPrice || !startDate || !endDate || checkedBranches.length === 0) {
+      alert("Tüm alanları doldur ve en az bir şube seç.");
+      return;
+    }
+
+    if (new Date(endDate) < new Date(startDate)) {
+      alert("Bitiş tarihi başlangıç tarihinden önce olamaz.");
+      return;
+    }
+
+    const button = document.getElementById('btn-publish');
+    button.disabled = true;
+    button.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> Yayınlanıyor...';
+
+    const { data: deal, error } = await client
+      .from('deals')
+      .insert({
+        business_id: currentBusiness.id,
+        title: product.name,
+        old_price: oldPrice,
+        new_price: newPrice,
+        image_url: product.img,
+        start_date: `${startDate}T00:00:00`,
+        end_date: `${endDate}T23:59:59`,
+        active: true,
+        main_type: product.type,
+        category: product.category
+      })
+      .select()
+      .single();
+
+    if (error) {
+      alert("Hata: " + error.message);
+      button.disabled = false;
+      button.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Kampanyayı Yayınla';
+      return;
+    }
+
+    const branchInsert = await client
+      .from('deal_branches')
+      .insert(checkedBranches.map(branchId => ({
+        deal_id: deal.id,
+        branch_id: branchId
+      })));
+
+    if (branchInsert.error) {
+      alert("Şube bağlantı hatası: " + branchInsert.error.message);
+      button.disabled = false;
+      button.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Kampanyayı Yayınla';
+      return;
+    }
+
+    alert(`✅ Kampanya yayınlandı: ${product.name}`);
+
+    resetCreateForm();
+    await reloadAllData();
+    switchTab('active');
+
+    button.disabled = false;
+    button.innerHTML = '<i class="fa-solid fa-paper-plane mr-2"></i> Kampanyayı Yayınla';
+  }
+
+  function resetCreateForm() {
+    document.getElementById('level-type').value = '';
+    document.getElementById('level-cat').innerHTML = '<option value="">Önce ana tür seçin</option>';
+    document.getElementById('level-cat').disabled = true;
+    document.getElementById('level-prod').innerHTML = '<option value="">Önce kategori seçin</option>';
+    document.getElementById('level-prod').disabled = true;
+    document.getElementById('price-old').value = '';
+    document.getElementById('price-new').value = '';
+    setDefaultDates();
+    document.querySelectorAll('#branches-list input').forEach(cb => cb.checked = false);
+    document.getElementById('preview-card').classList.add('hidden');
+    document.getElementById('preview-empty').classList.remove('hidden');
+  }
+
+  function isCurrentlyActive(deal) {
+    const now = Date.now();
+    const end = deal.end_date ? new Date(deal.end_date).getTime() : null;
+    return deal.active === true && (!end || end >= now);
+  }
+
+  async function fetchDealsWithMeta() {
+    if (!client) return [];
+
+    const [dealsRes, linkRes] = await Promise.all([
+      client.from('deals').select('*').order('created_at', { ascending: false }),
+      client.from('deal_branches').select('deal_id, branch_id')
+    ]);
+
+    const deals = dealsRes.data || [];
+    const links = linkRes.data || [];
+
+    const branchCountMap = {};
+    links.forEach(link => {
+      branchCountMap[link.deal_id] = (branchCountMap[link.deal_id] || 0) + 1;
+    });
+
+    return deals.map(deal => ({
+      ...deal,
+      business_name: currentBusiness?.name || 'Market',
+      branch_count: branchCountMap[deal.id] || 0,
+      date_label: formatDateRange(deal.start_date, deal.end_date),
+      discount_pct: deal.old_price > 0 ? Math.round(((deal.old_price - deal.new_price) / deal.old_price) * 100) : 0
+    }));
+  }
+
+  async function loadOverview() {
+    const allDeals = await fetchDealsWithMeta();
+    activeDealsCache = allDeals.filter(isCurrentlyActive);
+    historyDealsCache = allDeals.filter(d => !isCurrentlyActive(d));
+
+    document.getElementById('stat-active').innerText = activeDealsCache.length;
+    document.getElementById('stat-history').innerText = historyDealsCache.length;
+    document.getElementById('stat-last').innerText = activeDealsCache[0]?.title || allDeals[0]?.title || '-';
+
+    dealMap = {};
+    allDeals.forEach(deal => {
+      dealMap[deal.id] = deal;
+    });
+  }
+
+  async function loadActiveDeals() {
+    const allDeals = await fetchDealsWithMeta();
+    activeDealsCache = allDeals.filter(isCurrentlyActive);
+    activeDealsCache.forEach(deal => dealMap[deal.id] = deal);
+
+    const container = document.getElementById('active-deals');
+
+    if (activeDealsCache.length === 0) {
+      container.innerHTML = '<div class="text-gray-500">Aktif kampanya yok.</div>';
+      return;
+    }
+
+    container.innerHTML = activeDealsCache.map(deal => `
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden">
+        <div class="relative h-44 bg-black">
+          <img src="${deal.image_url}" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"></div>
+          <div class="absolute top-3 left-3 bg-black/80 border border-orange-500 text-orange-400 text-[11px] font-bold px-3 py-1 rounded-full">
+            ${deal.date_label}
+          </div>
+          <div class="absolute top-3 right-3 bg-black/80 border border-orange-500 text-white text-xs font-black px-3 py-1 rounded-full">
+            -%${deal.discount_pct}
+          </div>
+        </div>
+
+        <div class="p-5">
+          <div class="text-xs uppercase tracking-[0.22em] text-orange-400 font-bold mb-2">${capitalizeTR(deal.category || '-')}</div>
+          <h3 class="text-xl font-black mb-3">${deal.title}</h3>
+
+          <div class="flex items-baseline gap-3 mb-4">
+            <span class="text-gray-500 line-through">${formatCurrency(deal.old_price)}</span>
+            <span class="text-3xl font-black text-orange-500">${formatCurrency(deal.new_price)}</span>
+          </div>
+
+          <div class="text-sm text-gray-400 mb-4">
+            ${deal.branch_count} şubede aktif
+          </div>
+
+          <div class="grid grid-cols-1 gap-2">
+            <button onclick="downloadInstagramPost('${deal.id}')" class="bg-orange-600 hover:bg-orange-500 text-white font-bold py-3 rounded-xl">
+              <i class="fa-solid fa-download mr-2"></i> Instagram Post İndir
+            </button>
+
+            <button onclick="deactivateDeal('${deal.id}')" class="bg-gray-800 hover:bg-gray-700 text-white font-semibold py-3 rounded-xl">
+              <i class="fa-solid fa-pause mr-2"></i> Kampanyayı Durdur
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function loadHistoryDeals() {
+    const allDeals = await fetchDealsWithMeta();
+    historyDealsCache = allDeals.filter(d => !isCurrentlyActive(d));
+    const container = document.getElementById('history-deals');
+
+    if (historyDealsCache.length === 0) {
+      container.innerHTML = '<div class="text-gray-500">Geçmiş kampanya yok.</div>';
+      return;
+    }
+
+    container.innerHTML = historyDealsCache.map(deal => `
+      <div class="bg-[#111827] border border-gray-800 rounded-2xl overflow-hidden opacity-90">
+        <div class="relative h-40 bg-black">
+          <img src="${deal.image_url}" class="w-full h-full object-cover">
+          <div class="absolute inset-0 bg-black/45"></div>
+          <div class="absolute top-3 left-3 bg-gray-900/90 border border-gray-600 text-gray-300 text-[11px] font-bold px-3 py-1 rounded-full">
+            ${deal.date_label}
+          </div>
+        </div>
+
+        <div class="p-5">
+          <div class="text-xs uppercase tracking-[0.22em] text-gray-400 font-bold mb-2">${capitalizeTR(deal.category || '-')}</div>
+          <h3 class="text-lg font-black mb-3">${deal.title}</h3>
+          <div class="flex items-baseline gap-3">
+            <span class="text-gray-500 line-through">${formatCurrency(deal.old_price)}</span>
+            <span class="text-xl font-black text-gray-300">${formatCurrency(deal.new_price)}</span>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function deactivateDeal(dealId) {
+    if (!confirm('Bu kampanya durdurulsun mu?')) return;
+    const { error } = await client.from('deals').update({ active: false }).eq('id', dealId);
+    if (error) {
+      alert('Hata: ' + error.message);
+      return;
+    }
+    await reloadAllData();
+    await loadActiveDeals();
+    await loadHistoryDeals();
+    alert('Kampanya durduruldu.');
+  }
+
+  function proxifyImage(url) {
+    if (!url) return '';
+    try {
+      const clean = url.replace(/^https?:\/\//, '');
+      return `https://images.weserv.nl/?url=${encodeURIComponent(clean)}&w=1200&h=1200&fit=cover&output=jpg&q=90`;
+    } catch {
+      return url;
+    }
+  }
+
+  function loadImage(url) {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = reject;
+      img.src = proxifyImage(url);
+    });
+  }
+
+  function drawRoundedRect(ctx, x, y, w, h, r, fillStyle, strokeStyle = null, lineWidth = 1) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+
+    if (fillStyle) {
+      ctx.fillStyle = fillStyle;
+      ctx.fill();
+    }
+    if (strokeStyle) {
+      ctx.lineWidth = lineWidth;
+      ctx.strokeStyle = strokeStyle;
+      ctx.stroke();
+    }
+  }
+
+  function drawCoverImage(ctx, img, x, y, w, h) {
+    const scale = Math.max(w / img.width, h / img.height);
+    const sw = img.width * scale;
+    const sh = img.height * scale;
+    const dx = x + (w - sw) / 2;
+    const dy = y + (h - sh) / 2;
+    ctx.drawImage(img, dx, dy, sw, sh);
+  }
+
+  function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+    const words = text.split(' ');
+    let line = '';
+    let currentY = y;
+
+    for (let n = 0; n < words.length; n++) {
+      const testLine = line + words[n] + ' ';
+      const metrics = ctx.measureText(testLine);
+
+      if (metrics.width > maxWidth && n > 0) {
+        ctx.fillText(line.trim(), x, currentY);
+        line = words[n] + ' ';
+        currentY += lineHeight;
+      } else {
+        line = testLine;
+      }
+    }
+
+    ctx.fillText(line.trim(), x, currentY);
+    return currentY;
+  }
+
+  async function downloadInstagramPost(dealId) {
+    const deal = dealMap[dealId];
+    if (!deal) {
+      alert('Kampanya bulunamadı.');
+      return;
+    }
+
+    try {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1080;
+      canvas.height = 1080;
+      const ctx = canvas.getContext('2d');
+
+      // Arka plan
+      ctx.fillStyle = '#05070D';
+      ctx.fillRect(0, 0, 1080, 1080);
+
+      // Ürün görseli
+      const img = await loadImage(deal.image_url);
+      drawCoverImage(ctx, img, 40, 180, 1000, 520);
+
+      // Karanlık overlay
+      const gradient = ctx.createLinearGradient(0, 160, 0, 1080);
+      gradient.addColorStop(0, 'rgba(0,0,0,0.10)');
+      gradient.addColorStop(0.55, 'rgba(0,0,0,0.15)');
+      gradient.addColorStop(1, 'rgba(0,0,0,0.85)');
+      ctx.fillStyle = gradient;
+      ctx.fillRect(40, 180, 1000, 520);
+
+      // Üst başlık - market adı
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 64px Arial';
+      ctx.fillText((deal.business_name || 'MARKET').toUpperCase(), 540, 90);
+
+      ctx.strokeStyle = '#FF6B00';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(340, 125);
+      ctx.lineTo(740, 125);
+      ctx.stroke();
+
+      // Tarih şeridi
+      drawRoundedRect(ctx, 60, 48, 360, 56, 28, 'rgba(0,0,0,0.80)', '#FF6B00', 2);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FF8A2A';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText(deal.date_label, 240, 83);
+
+      // İndirim rozeti
+      ctx.beginPath();
+      ctx.arc(900, 115, 90, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(0,0,0,0.82)';
+      ctx.fill();
+      ctx.lineWidth = 4;
+      ctx.strokeStyle = '#FF6B00';
+      ctx.shadowColor = '#FF6B00';
+      ctx.shadowBlur = 20;
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 64px Arial';
+      ctx.fillText(`%${deal.discount_pct}`, 900, 110);
+      ctx.fillStyle = '#FF8A2A';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText('İNDİRİM', 900, 150);
+
+      // Alt metin alanı
+      ctx.textAlign = 'left';
+      ctx.fillStyle = '#D97706';
+      ctx.font = 'bold 24px Arial';
+      ctx.fillText((deal.category || '').toUpperCase(), 70, 760);
+
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 84px Arial';
+      const lastY = wrapText(ctx, deal.title.toUpperCase(), 70, 860, 560, 86);
+
+      // Eski fiyat
+      ctx.fillStyle = '#D1D5DB';
+      ctx.font = 'bold 58px Arial';
+      ctx.fillText(formatCurrency(deal.old_price), 700, lastY - 30);
+      const oldW = ctx.measureText(formatCurrency(deal.old_price)).width;
+      ctx.strokeStyle = '#FF6B00';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(700, lastY - 58);
+      ctx.lineTo(700 + oldW, lastY - 58);
+      ctx.stroke();
+
+      // Yeni fiyat
+      ctx.fillStyle = '#FFFFFF';
+      ctx.font = 'bold 120px Arial';
+      ctx.shadowColor = '#FF6B00';
+      ctx.shadowBlur = 22;
+      ctx.fillText(formatCurrency(deal.new_price), 630, 980);
+      ctx.shadowBlur = 0;
+
+      // Alt slogan yerine tarih güveni
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FF8A2A';
+      ctx.font = 'bold 28px Arial';
+      ctx.fillText('KAMPANYA TARİHİ GÖRSEL ÜZERİNDEDİR', 540, 1035);
+
+      const link = document.createElement('a');
+      link.download = `${deal.title.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g, '').replace(/\s+/g, '-').toLowerCase()}-instagram-post.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch (err) {
+      console.error(err);
+      alert('Görsel oluşturulamadı. Görsel kaynağı CORS engeline takılmış olabilir.');
+    }
+  }
+
+  window.onload = async () => {
+    setDefaultDates();
+    switchTab('home');
+    await initSupabase();
+  };
 </script>
+
 </body>
 </html>
