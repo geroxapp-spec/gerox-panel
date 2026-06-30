@@ -3,205 +3,120 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerox - Mağaza Paneli</title>
-
+<title>Gerox - İşletme Paneli</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-
 <body class="bg-[#0B0F19] text-gray-200 min-h-screen font-sans">
-
 <div class="flex">
-
-<!-- SIDEBAR -->
 <aside class="w-64 bg-[#111827] min-h-screen p-6 border-r border-gray-800">
 <div class="text-2xl font-black text-orange-500 mb-8">Gerox</div>
-
 <nav class="space-y-3">
-<button onclick="switchTab('dashboard')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">
-İndirimler
-</button>
-<button onclick="switchTab('ayarlar')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">
-Bağlantı Ayarları
-</button>
+<button onclick="switchTab('dashboard')" class="block w-full text-left bg-orange-600 px-4 py-3 rounded-lg">İndirim Ekle</button>
+<button onclick="switchTab('ayarlar')" class="block w-full text-left px-4 py-3 rounded-lg hover:bg-gray-800">Bağlantı Ayarları</button>
 </nav>
 </aside>
-
-<!-- CONTENT -->
 <main class="flex-1 p-8">
-
 <section id="tab-dashboard">
+<h1 class="text-2xl font-bold mb-2">Yeni İndirim Ekle</h1>
+<p class="text-gray-400 text-sm mb-6">Ürün kategorisini seçerek hatasız indirim yayınlayın.</p>
 
-<h1 class="text-2xl font-bold mb-6">Yeni İndirim Ekle</h1>
-
-<div id="setup-warning" class="hidden bg-yellow-900/40 border border-yellow-500 p-4 rounded mb-6">
-Önce bağlantı ayarlarını yapmalısın.
-</div>
+<div id="setup-warning" class="hidden bg-yellow-900/40 border border-yellow-500 p-4 rounded mb-6">Önce bağlantı ayarlarını yapmalısın.</div>
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-
 <div class="bg-[#111827] p-6 rounded-xl space-y-4">
 
-<input id="deal-title" placeholder="Ürün Başlığı"
-class="w-full bg-gray-800 p-3 rounded">
+<!-- 1. ANA KATEGORİ -->
+<div>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Sektör Seç</label>
+<select id="ana-kat" onchange="updateAltKategori()" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white">
+<option value="">Seçin...</option>
+<option value="gida">Gıda</option>
+<option value="gida-dis">Gıda Dışı</option>
+</select>
+</div>
 
+<!-- 2. ALT KATEGORİ (İşletme Tipi) -->
+<div>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">İşletme Tipi / Reyon</label>
+<select id="alt-kat" onchange="updateUrun()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
+<option value="">Önce sektör seçin...</option>
+</select>
+</div>
+
+<!-- 3. ÜRÜN -->
+<div>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Ürün Seç</label>
+<select id="urun" onchange="updatePreview()" disabled class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 text-white disabled:opacity-50">
+<option value="">Önce reyon seçin...</option>
+</select>
+</div>
+
+<!-- FİYATLAR -->
 <div class="grid grid-cols-2 gap-4">
-<input id="deal-old-price" type="number" placeholder="Eski Fiyat"
-class="bg-gray-800 p-3 rounded">
-<input id="deal-new-price" type="number" placeholder="Yeni Fiyat"
-class="bg-gray-800 p-3 rounded">
+<input id="old-price" type="number" placeholder="Eski Fiyat (TL)" oninput="updatePreview()" class="bg-[#1F2937] p-3 rounded border border-gray-700">
+<input id="new-price" type="number" placeholder="Yeni Fiyat (TL)" oninput="updatePreview()" class="bg-[#1F2937] p-3 rounded border border-gray-700">
 </div>
 
-<div id="branches-list" class="bg-gray-800 p-4 rounded max-h-40 overflow-y-auto">
-Şubeler yükleniyor...
+<!-- ŞUBELER -->
+<div>
+<label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Geçerli Şubeler</label>
+<div id="branches-list" class="bg-[#1F2937] p-4 rounded-xl border border-gray-700 max-h-40 overflow-y-auto">Şubeler yükleniyor...</div>
 </div>
 
-<button onclick="publishDeal()" id="btn-publish"
-class="w-full bg-orange-600 py-3 rounded font-bold">
-İndirimi Yayınla
-</button>
-
+<button onclick="publishDeal()" id="btn-publish" class="w-full bg-orange-600 hover:bg-orange-500 py-3 rounded-xl font-bold">İndirimi Yayınla</button>
 </div>
 
+<!-- ÖNİZLEME -->
 <div class="bg-[#111827] p-6 rounded-xl">
 <h2 class="text-lg mb-4">Canlı Önizleme</h2>
-<div id="preview" class="bg-gray-900 p-4 rounded">
-Başlık burada görünecek
+<div id="preview-card" class="hidden bg-gray-900 rounded-2xl overflow-hidden shadow-xl">
+<div class="relative h-48 bg-gray-800">
+<img id="p-img" src="" class="w-full h-full object-cover">
+<span id="p-badge" class="absolute top-3 left-3 bg-red-600 text-white text-xs font-bold px-3 py-1 rounded-full">İNDİRİM</span>
+</div>
+<div class="p-5">
+<h3 id="p-title" class="font-bold text-xl mb-1"></h3>
+<p id="p-cat" class="text-gray-500 text-sm mb-3"></p>
+<div class="flex items-baseline gap-3">
+<span id="p-old" class="text-gray-500 line-through text-lg"></span>
+<span id="p-new" class="text-3xl font-black text-orange-500"></span>
+</div>
+<div class="mt-4 pt-4 border-t border-gray-800 flex justify-between text-sm text-gray-400">
+<span><i class="fa-solid fa-store text-orange-500 mr-1"></i> <span id="p-business">Mansur Gross</span></span>
+<span><i class="fa-solid fa-location-dot mr-1"></i> 800m</span>
 </div>
 </div>
-
+</div>
+<div id="preview-empty" class="text-gray-500 text-center py-12">Ürün seçtiğinizde önizleme burada görünecek...</div>
+</div>
 </div>
 </section>
 
 <section id="tab-ayarlar" class="hidden max-w-md space-y-4">
-
 <h1 class="text-xl font-bold">Bağlantı Ayarları</h1>
-
-<input id="cfg-url" placeholder="Supabase URL"
-class="w-full bg-gray-800 p-3 rounded">
-
-<input id="cfg-key" type="password" placeholder="Supabase Anon Key"
-class="w-full bg-gray-800 p-3 rounded">
-
-<button onclick="saveSettings()" class="bg-orange-600 px-6 py-3 rounded font-bold">
-Bağlantıyı Kaydet
-</button>
-
+<input id="cfg-url" placeholder="Supabase URL" class="w-full bg-gray-800 p-3 rounded border border-gray-700">
+<input id="cfg-key" type="password" placeholder="Supabase Anon Key" class="w-full bg-gray-800 p-3 rounded border border-gray-700">
+<button onclick="saveSettings()" class="bg-orange-600 px-6 py-3 rounded font-bold w-full">Bağlantıyı Kaydet</button>
 </section>
-
 </main>
 </div>
 
 <script>
 let client = null;
 
-function switchTab(tab) {
-document.getElementById('tab-dashboard').classList.add('hidden');
-document.getElementById('tab-ayarlar').classList.add('hidden');
-document.getElementById('tab-' + tab).classList.remove('hidden');
-}
-
-function saveSettings() {
-localStorage.setItem('gerox_url', document.getElementById('cfg-url').value);
-localStorage.setItem('gerox_key', document.getElementById('cfg-key').value);
-initSupabase();
-switchTab('dashboard');
-}
-
-function initSupabase() {
-const url = localStorage.getItem('gerox_url');
-const key = localStorage.getItem('gerox_key');
-
-if (!url || !key) {
-document.getElementById('setup-warning').classList.remove('hidden');
-return;
-}
-
-document.getElementById('setup-warning').classList.add('hidden');
-
-const { createClient } = window.supabase;
-client = createClient(url, key);
-
-loadBranches();
-}
-
-async function loadBranches() {
-if (!client) return;
-
-const { data, error } = await client.from('branches').select('id,name');
-
-const list = document.getElementById('branches-list');
-list.innerHTML = '';
-
-if (error) {
-list.innerHTML = "Hata: " + error.message;
-return;
-}
-
-if (!data || data.length === 0) {
-list.innerHTML = "Şube bulunamadı.";
-return;
-}
-
-data.forEach(b => {
-list.innerHTML += `
-<label class="block mb-2">
-<input type="checkbox" value="${b.id}" class="mr-2">
-${b.name}
-</label>
-`;
-});
-}
-
-async function publishDeal() {
-if (!client) {
-alert("Bağlantı ayarlarını yap.");
-return;
-}
-
-const title = document.getElementById('deal-title').value;
-const oldPrice = parseFloat(document.getElementById('deal-old-price').value);
-const newPrice = parseFloat(document.getElementById('deal-new-price').value);
-
-const checked = Array.from(document.querySelectorAll('#branches-list input:checked')).map(x => x.value);
-
-if (!title || !oldPrice || !newPrice || checked.length === 0) {
-alert("Tüm alanları doldur ve şube seç.");
-return;
-}
-
-const { data: business } = await client.from('businesses').select('id').limit(1).single();
-
-if (!business) {
-alert("Business yok.");
-return;
-}
-
-const { data: deal, error } = await client.from('deals').insert({
-business_id: business.id,
-title,
-old_price: oldPrice,
-new_price: newPrice
-}).select().single();
-
-if (error) {
-alert(error.message);
-return;
-}
-
-await client.from('deal_branches').insert(
-checked.map(id => ({
-deal_id: deal.id,
-branch_id: id
-}))
-);
-
-alert("İndirim yayınlandı ✅");
-}
-
-window.onload = initSupabase;
-</script>
-
-</body>
-</html>
+// KATEGORİ KİTABI (İşletme tipine göre her şey burada)
+const KATALOG = {
+  "gida": {
+    label: "Gıda",
+    alt: {
+      "manav": { label: "Manav", urunler: [
+        {id:"karpuz", ad:"Karpuz (KG)", img:"https://images.unsplash.com/photo-1587049352846-4a222e784d38?w=500"},
+        {id:"domates", ad:"Domates (KG)", img:"https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=500"},
+        {id:"salatalik", ad:"Salatalık (KG)", img:"https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?w=500"},
+        {id:"biber", ad:"Biber (KG)", img:"https://images.unsplash.com/photo-1563565375-f3fdf5be05cd?w=500"},
+        {id:"patlican", ad:"Patlıcan (KG)", img:"https://images.unsplash.com/photo-1615485290382-441e4d049cb5?w=500"}
+      ]},
+      "kasap": { label: "Kasap", urunler: [
+        {id:"kiyma", ad:"Dana Kıyma (KG)", 
