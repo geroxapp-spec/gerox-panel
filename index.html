@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerox - Mağaza Paneli</title>
+    <!-- Tailwind CSS (Modern Arayüz) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome (İkonlar) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-[#0B0F19] text-gray-200 min-h-screen font-sans">
+
+    <div class="flex">
+        <!-- SOL MENÜ (SIDEBAR) -->
+        <aside class="w-64 bg-[#111827] min-h-screen p-6 flex flex-col justify-between border-r border-gray-800">
+            <div>
+                <!-- Logo -->
+                <div class="flex items-center gap-3 mb-8">
+                    <span class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-[#FF6B00] to-orange-400">G gerox</span>
+                </div>
+                <!-- Menü Elemanları -->
+                <nav class="space-y-2">
+                    <a href="#" onclick="switchTab('dashboard')" class="flex items-center gap-3 px-4 py-3 rounded-lg bg-[#FF6B00] text-white transition-all">
+                        <i class="fa-solid fa-tags"></i>
+                        <span>İndirimler</span>
+                    </a>
+                    <a href="#" onclick="switchTab('ayarlar')" class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-all">
+                        <i class="fa-solid fa-gear"></i>
+                        <span>Bağlantı Ayarları</span>
+                    </a>
+                </nav>
+            </div>
+            <!-- Usta Sürüm Bilgisi -->
+            <div class="text-xs text-gray-500 border-t border-gray-800 pt-4">
+                Gerox Admin v1.0 <br>
+                Usta & Çırak Yapımı 🛠️
+            </div>
+        </aside>
+
+        <!-- SAĞ İÇERİK ALANI -->
+        <main class="flex-1 p-8">
+            <!-- 1. SEKME: İNDİRİMLER (DASHBOARD) -->
+            <section id="tab-dashboard" class="space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-2xl font-bold">Yeni İndirim Ekle</h1>
+                        <p class="text-sm text-gray-400">Şubelerinize anında canlı indirim gönderin.</p>
+                    </div>
+                </div>
+
+                <!-- Kurulum Uyarısı (Eğer keyler girilmediyse) -->
+                <div id="setup-warning" class="hidden bg-amber-950/40 border border-amber-500/50 text-amber-200 p-4 rounded-xl flex justify-between items-center">
+                    <div class="flex items-center gap-3">
+                        <i class="fa-solid fa-triangle-exclamation text-amber-500 text-xl"></i>
+                        <span>Sistemin çalışması için önce bağlantı ayarlarını yapmalısın.</span>
+                    </div>
+                    <button onclick="switchTab('ayarlar')" class="bg-amber-500 text-black px-4 py-2 rounded-lg font-bold text-xs hover:bg-amber-400 transition-all">Ayarları Yap</button>
+                </div>
+
+                <!-- FORM VE ÖNİZLEME YAN YANA -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Sol: Form -->
+                    <div class="lg:col-span-7 bg-[#111827] border border-gray-800 p-6 rounded-2xl space-y-6">
+                        <h2 class="text-lg font-semibold border-b border-gray-800 pb-3">İndirim Bilgileri</h2>
+                        
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">İndirim Başlığı</label>
+                            <input type="text" id="deal-title" oninput="updatePreview()" placeholder="Örn: Taze Kaşar Peyniri 1 KG" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#FF6B00] transition-all">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Eski Fiyat (TL)</label>
+                                <input type="number" id="deal-old-price" oninput="updatePreview()" placeholder="199.90" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#FF6B00] transition-all">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Yeni Fiyat (TL)</label>
+                                <input type="number" id="deal-new-price" oninput="updatePreview()" placeholder="149.90" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#FF6B00] transition-all">
+                            </div>
+                        </div>
+
+                        <!-- Şube Seçimi -->
+                        <div>
+                            <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Geçerli Olacak Şubeler</label>
+                            <div id="branches-list" class="space-y-2 max-h-40 overflow-y-auto bg-[#1F2937] p-3 rounded-xl border border-gray-700">
+                                <span class="text-xs text-gray-500">Şubeler yükleniyor...</span>
+                            </div>
+                        </div>
+
+                        <!-- Yayınla Butonu -->
+                        <button onclick="publishDeal()" id="btn-publish" class="w-full bg-[#FF6B00] hover:bg-orange-600 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-orange-500/10">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>İndirimi Yayınla</span>
+                        </button>
+                    </div>
+
+                    <!-- Sağ: Canlı Önizleme -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <h2 class="text-lg font-semibold text-gray-400">Canlı Önizleme</h2>
+                        
+                        <!-- Kart Tasarımı (Tıpkı Mobil App'teki Gibi) -->
+                        <div class="bg-[#111827] border border-gray-800 rounded-3xl overflow-hidden relative shadow-2xl max-w-sm mx-auto">
+                            <!-- Görsel Alanı (Varsayılan Kaşar Resmi) -->
+                            <div class="h-64 bg-gray-800 relative flex items-center justify-center">
+                                <img id="preview-image" src="https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=500" class="w-full h-full object-cover">
+                                <span class="absolute top-4 left-4 bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-wider">Son 2 Gün!</span>
+                                <span id="preview-discount" class="absolute bottom-4 right-4 bg-green-600 text-white text-lg font-black px-3.5 py-1.5 rounded-2xl">-%25</span>
+                            </div>
+                            
+                            <!-- İçerik -->
+                            <div class="p-6 space-y-4">
+                                <h3 id="preview-title" class="text-xl font-bold line-clamp-1">Taze Kaşar Peyniri 1 KG</h3>
+                                
+                                <div class="flex items-baseline gap-3">
+                                    <span id="preview-old-price" class="text-gray-500 line-through text-lg">199.90 ₺</span>
+                                    <span id="preview-new-price" class="text-3xl font-black text-[#FF6B00]">149.90 ₺</span>
+                                </div>
+
+                                <div class="flex items-center justify-between border-t border-gray-800 pt-4 text-xs text-gray-400">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-store text-[#FF6B00]"></i>
+                                        <span id="preview-store">Mansur Gross</span>
+                                    </span>
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-location-dot"></i>
+                                        <span>800 m</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. SEKME: AYARLAR -->
+            <section id="tab-ayarlar" class="hidden max-w-xl space-y-6">
+                <div>
+                    <h1 class="text-2xl font-bold">Bağlantı Ayarları</h1>
+                    <p class="text-sm text-gray-400">Veritabanınızla olan bağlantıyı buradan şifreli olarak yapın.</p>
+                </div>
+
+                <div class="bg-[#111827] border border-gray-800 p-6 rounded-2xl space-y-4">
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Supabase Project URL</label>
+                        <input type="text" id="cfg-url" placeholder="https://vgzjtmqsvaxmvulaxiri.supabase.co" class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#FF6B00] text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold uppercase text-gray-400 mb-2">Supabase Anon Key</label>
+                        <input type="password" id="cfg-key" placeholder="eyJhbGciOiJIUzI1Ni..." class="w-full bg-[#1F2937] border border-gray-700 rounded-xl px-4 py-3 focus:outline-none focus:border-[#FF6B00] text-sm">
+                    </div>
+                    <button onclick="saveSettings()" class="bg-[#FF6B00] hover:bg-orange-600 text-white font-bold px-6 py-3 rounded-xl transition-all">
+                        Bağlantıyı Kaydet
+                    </button>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- JAVASCRIPT BAĞLANTI VE İŞLEMLER -->
+    <script>
+        let supabase = null;
+
+        // Sekme Değiştirme
+        function switchTab(tab) {
+            document.getElementById('tab-dashboard').classList.add('hidden');
+            document.getElementById('tab-ayarlar').classList.add('hidden');
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+        }
+
+        // Ayarları LocalStorage'a kaydet (0 maliyet & %100 gizlilik)
+        function saveSettings() {
+            const url = document.getElementById('cfg-url').value;
+            const key = document.getElementById('cfg-key').value;
+            localStorage.setItem('gerox_url', url);
+            localStorage.setItem('gerox_key', key);
+            alert('Bağlantı ayarları tarayıcınıza şifreli olarak kaydedildi! 🎉');
+            initSupabase();
+            switchTab('dashboard');
+        }
+
+        // Supabase Bağlantısını Başlat
+        function initSupabase() {
+            const url = localStorage.getItem('gerox_url');
+            const key = localStorage.getItem('gerox_key');
+            
+            if (url && key) {
+                document.getElementById('cfg-url').value = url;
+                document.getElementById('cfg-key').value = key;
+                document.getElementById('setup-warning').classList.add('hidden');
+                supabase = supabase.createClient(url, key);
+                loadBranches();
+            } else {
+                document.getElementById('setup-warning').classList.remove('hidden');
+            }
+        }
+
+        // Şubeleri DB'den Çekip Form Checkbox'ına Ekleme
+        async function loadBranches() {
+            if (!supabase) return;
+            try {
+                const { data, error } = await supabase.from('branches').select('id, name');
+                if (error) throw error;
+                
+                const list = document.getElementById('branches-list');
+                list.innerHTML = '';
+                
+                if (data.length === 0) {
+                    list.innerHTML = '<span class="text-xs text-gray-500">Önce Supabase\'e şube eklemelisiniz.</span>';
+                    return;
+                }
+
+                data.forEach(branch => {
+                    list.innerHTML += `
+                        <label class="flex items-center gap-3 text-sm cursor-pointer hover:text-white transition-all">
+                            <input type="checkbox" name="branch-select" value="${branch.id}" class="accent-[#FF6B00] rounded">
+                            <span>${branch.name}</span>
+                        </label>
+                    `;
+                });
+            } catch (err) {
+                console.error('Şubeler yüklenemedi:', err);
+            }
+        }
+
+        // Canlı Önizleme Güncelleme (Anlık Tepki)
+        function updatePreview() {
+            const title = document.getElementById('deal-title').value || 'Taze Kaşar Peyniri 1 KG';
+            const oldPrice = parseFloat(document.getElementById('deal-old-price').value) || 199.90;
+            const newPrice = parseFloat(document.getElementById('deal-new-price').value) || 149.90;
+
+            document.getElementById('preview-title').innerText = title;
+            document.getElementById('preview-old-price').innerText = oldPrice.toFixed(2) + ' ₺';
+            document.getElementById('preview-new-price').innerText = newPrice.toFixed(2) + ' ₺';
+
+            // İndirim Oranı Hesapla
+            const discount = Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+            document.getElementById('preview-discount').innerText = discount > 0 ? `-%${discount}` : '%0';
+        }
+
+        // İNDİRİMİ DB'YE YAYINLA
+        async function publishDeal() {
+            if (!supabase) {
+                alert('Önce bağlantı ayarlarını yapmalısın!');
+                return;
+            }
+
+            const title = document.getElementById('deal-title').value;
+            const oldPrice = parseFloat(document.getElementById('deal-old-price').value);
+            const newPrice = parseFloat(document.getElementById('deal-new-price').value);
+            
+            // Seçili şubeleri al
+            const checkedBoxes = document.querySelectorAll('input[name="branch-select"]:checked');
+            const branchIds = Array.from(checkedBoxes).map(cb => cb.value);
+
+            if (!title || !oldPrice || !newPrice) {
+                alert('Lütfen tüm indirim alanlarını doldurun.');
+                return;
+            }
+
+            if (branchIds.length === 0) {
+                alert('Lütfen en az bir şube seçin.');
+                return;
+            }
+
+            document.getElementById('btn-publish').disabled = true;
+            document.getElementById('btn-publish').innerText = 'Yayınlanıyor...';
+
+            try {
+                // 1. Önce Marka ID'sini (Business) Çekelim (İlk bulduğunu alıyoruz)
+                const { data: busData } = await supabase.from('businesses').select('id').limit(1).single();
+                
+                if (!busData) {
+                    alert('Veritabanında hiç işletme bulunamadı! Önce Supabase\'e işletme ekle.');
+                    return;
+                }
+
+                // 2. Deals tablosuna ekle
+                const { data: deal, error: dealError } = await supabase.from('deals').insert({
+                    business_id: busData.id,
+                    title: title,
+                    old_price: oldPrice,
+                    new_price: newPrice,
+                    image_url: 'https://images.unsplash.com/photo-1486299267070-83823f5448dd?w=500' // Şimdilik mock görsel
+                }).select().single();
+
+                if (dealError) throw dealError;
+
+                // 3. Çoklu Şube Bağlantısını Kur (deal_branches)
+                const junctionData = branchIds.map(bId => ({
+                    deal_id: deal.id,
+                    branch_id: bId
+                }));
+
+                const { error: junctionError } = await supabase.from('deal_branches').insert(junctionData);
+                if (junctionError) throw junctionError;
+
+                alert('🎉 İndirim başarıyla yayınlandı! Şubelere ulaştırıldı.');
+                
+                // Formu temizle
+                document.getElementById('deal-title').value = '';
+                document.getElementById('deal-old-price').value = '';
+                document.getElementById('deal-new-price').value = '';
+                checkedBoxes.forEach(cb => cb.checked = false);
+                updatePreview();
+
+            } catch (err) {
+                alert('Hata oluştu: ' + err.message);
+                console.error(err);
+            } finally {
+                document.getElementById('btn-publish').disabled = false;
+                document.getElementById('btn-publish').innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>İndirimi Yayınla</span>';
+            }
+        }
+
+        // Sayfa Açıldığında
+        window.onload = () => {
+            initSupabase();
+        };
+    </script>
+</body>
+</html>
