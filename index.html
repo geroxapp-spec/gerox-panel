@@ -812,129 +812,230 @@ async function saveBranch(){
 
 // ========== INSTAGRAM POST İNDİR ==========
 async function dlPost(id){
-  const{data:d}=await client.from("deals").select("*").eq("id",id).single();
-  if(!d){alert("Kampanya bulunamadı.");return;}
+  const{data:d,error}=await client.from("deals").select("*").eq("id",id).single();
+  if(error||!d){
+    alert("Kampanya bulunamadı.");
+    return;
+  }
 
   const canvas=document.createElement("canvas");
-  canvas.width=1080;canvas.height=1080;
+  canvas.width=1080;
+  canvas.height=1080;
   const ctx=canvas.getContext("2d");
+
+  // Görsel yükleme yardımcıları
+  const cleanUrl=(url)=>String(url||"").replace(/^https?:\/\//,"");
+
+  const productProxy=(url)=>{
+    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=1200&h=650&fit=cover&output=jpg&q=90";
+  };
+
+  const logoProxy=(url)=>{
+    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=700&output=png&q=90";
+  };
+
+  const loadImg=(url)=>new Promise((res,rej)=>{
+    const img=new Image();
+    img.crossOrigin="anonymous";
+    img.onload=()=>res(img);
+    img.onerror=()=>rej(new Error("Görsel yüklenemedi"));
+    img.src=url;
+  });
+
+  function drawCover(img,x,y,w,h){
+    const scale=Math.max(w/img.width,h/img.height);
+    const sw=img.width*scale;
+    const sh=img.height*scale;
+    ctx.drawImage(img,x+(w-sw)/2,y+(h-sh)/2,sw,sh);
+  }
+
+  function fitFont(text,maxWidth,startSize,minSize){
+    let size=startSize;
+    while(size>=minSize){
+      ctx.font=`bold ${size}px Arial`;
+      if(ctx.measureText(text).width<=maxWidth)return size;
+      size-=2;
+    }
+    return minSize;
+  }
+
+  function drawWrappedText(text,x,y,maxWidth,lineHeight,maxLines){
+    const words=String(text||"").split(" ");
+    let line="";
+    const lines=[];
+
+    for(let i=0;i<words.length;i++){
+      const test=line+words[i]+" ";
+      if(ctx.measureText(test).width>maxWidth&&line){
+        lines.push(line.trim());
+        line=words[i]+" ";
+        if(lines.length===maxLines-1)break;
+      }else{
+        line=test;
+      }
+    }
+
+    if(line&&lines.length<maxLines){
+      lines.push(line.trim());
+    }
+
+    lines.forEach((l,i)=>{
+      ctx.fillText(l,x,y+(i*lineHeight));
+    });
+  }
+
+  function roundedPath(x,y,w,h,r){
+    ctx.beginPath();
+    if(ctx.roundRect){
+      ctx.roundRect(x,y,w,h,r);
+    }else{
+      ctx.rect(x,y,w,h);
+    }
+  }
 
   // Arka plan
   ctx.fillStyle="#05070D";
   ctx.fillRect(0,0,1080,1080);
 
+  // Üst bölüm: sadece logo
+  if(biz?.logo_url){
+    try{
+      const logo=await loadImg(logoProxy(biz.logo_url));
+
+      const maxW=430;
+      const maxH=105;
+      const scale=Math.min(maxW/logo.width,maxH/logo.height);
+      const lw=logo.width*scale;
+      const lh=logo.height*scale;
+
+      ctx.drawImage(logo,(1080-lw)/2,35,lw,lh);
+    }catch(e){
+      // Logo hiç yüklenemezse yazı göster
+      ctx.textAlign="center";
+      ctx.fillStyle="#FFFFFF";
+      ctx.font="bold 52px Arial";
+      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,100);
+    }
+  }else{
+    ctx.textAlign="center";
+    ctx.fillStyle="#FFFFFF";
+    ctx.font="bold 52px Arial";
+    ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,100);
+  }
+
+  // Turuncu çizgi
+  ctx.strokeStyle="#FF6B00";
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(340,165);
+  ctx.lineTo(740,165);
+  ctx.stroke();
+
   // Ürün görseli
-  const loadImg=(url)=>new Promise((res,rej)=>{
-    const img=new Image();img.crossOrigin="anonymous";
-    img.onload=()=>res(img);img.onerror=rej;
-    img.src="https://images.weserv.nl/?url="+encodeURIComponent(url.replace(/^https?:\/\//,""))+"&w=1080&h=700&fit=cover&output=jpg&q=90";
-  });
+  const imgX=40;
+  const imgY=200;
+  const imgW=1000;
+  const imgH=500;
 
   try{
-    const img=await loadImg(d.image_url);
-    const scale=Math.max(1000/img.width,500/img.height);
-    const sw=img.width*scale,sh=img.height*scale;
+    const img=await loadImg(productProxy(d.image_url));
+
     ctx.save();
-    ctx.beginPath();
-    ctx.rect(40,200,1000,500);
+    roundedPath(imgX,imgY,imgW,imgH,14);
     ctx.clip();
-    ctx.drawImage(img,40+(1000-sw)/2,200+(500-sh)/2,sw,sh);
-    ctx.restore();
+    drawCover(img,imgX,imgY,imgW,imgH);
 
-    // Overlay
-    const grd=ctx.createLinearGradient(0,200,0,1080);
+    // Görsel üstüne hafif karartma
+    const grd=ctx.createLinearGradient(0,imgY,0,imgY+imgH);
     grd.addColorStop(0,"rgba(0,0,0,0.05)");
-    grd.addColorStop(0.6,"rgba(0,0,0,0.2)");
-    grd.addColorStop(1,"rgba(0,0,0,0.9)");
-    ctx.fillStyle=grd;ctx.fillRect(40,200,1000,500);
+    grd.addColorStop(0.65,"rgba(0,0,0,0.15)");
+    grd.addColorStop(1,"rgba(0,0,0,0.65)");
+    ctx.fillStyle=grd;
+    ctx.fillRect(imgX,imgY,imgW,imgH);
 
-    // Market logosu ve adı (üst kısım)
-    const headerY=110;
-    if(biz?.logo_url){
-      try{
-        const logo=await loadImg(biz.logo_url);
-        const lh=70,lw=lh*(logo.width/logo.height);
-        ctx.drawImage(logo,(1080-lw)/2,40,lw,lh);
-        // Logo altına market adı
-        ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 32px Arial";
-        ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,headerY+25);
-      }catch(e){
-        ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 42px Arial";
-        ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,90);
-      }
-    }else{
-      ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 42px Arial";
-      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,90);
-    }
-
-    // Turuncu çizgi
-    ctx.strokeStyle="#FF6B00";ctx.lineWidth=3;
-    ctx.beginPath();ctx.moveTo(340,170);ctx.lineTo(740,170);ctx.stroke();
-
-    // Tarih rozeti
-    const dlbl=dateRange(d.start_date,d.end_date);
+    ctx.restore();
+  }catch(e){
+    ctx.fillStyle="#111827";
+    roundedPath(imgX,imgY,imgW,imgH,14);
+    ctx.fill();
     ctx.textAlign="center";
-    ctx.fillStyle="rgba(0,0,0,0.85)";
-    const dtw=ctx.measureText(dlbl).width+60;
-    ctx.beginPath();ctx.roundRect(70,50,dtw,50,25);ctx.fill();
-    ctx.strokeStyle="#FF6B00";ctx.lineWidth=2;ctx.stroke();
-    ctx.fillStyle="#FF8A2A";ctx.font="bold 22px Arial";
-    ctx.textAlign="left";ctx.fillText(dlbl,100,83);
-
-    // İndirim rozeti
-    const disc=d.old_price>0?Math.round(((d.old_price-d.new_price)/d.old_price)*100):0;
-    ctx.beginPath();ctx.arc(920,110,80,0,Math.PI*2);
-    ctx.fillStyle="rgba(0,0,0,0.85)";ctx.fill();
-    ctx.strokeStyle="#FF6B00";ctx.lineWidth=4;
-    ctx.shadowColor="#FF6B00";ctx.shadowBlur=20;ctx.stroke();ctx.shadowBlur=0;
-    ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 52px Arial";
-    ctx.fillText("%"+disc,920,107);
-    ctx.fillStyle="#FF8A2A";ctx.font="bold 20px Arial";
-    ctx.fillText("İNDİRİM",920,140);
-
-    // Kategori
-    ctx.textAlign="left";ctx.fillStyle="#FF8A2A";ctx.font="bold 24px Arial";
-    ctx.fillText(cap(d.category||"").toUpperCase(),70,760);
-
-    // Ürün adı
-    ctx.fillStyle="#FFF";ctx.font="bold 80px Arial";
-    const titleWords=d.title.toUpperCase().split(" ");
-    let line="",ty=860;
-    titleWords.forEach(w=>{
-      const test=line+w+" ";
-      if(ctx.measureText(test).width>550&&line){
-        ctx.fillText(line.trim(),70,ty);line=w+" ";ty+=85;
-      }else{line=test;}
-    });
-    ctx.fillText(line.trim(),70,ty);
-
-    // Eski fiyat
-    ctx.fillStyle="#9CA3AF";ctx.font="bold 48px Arial";
-    ctx.textAlign="right";ctx.fillText(fmt(d.old_price),1010,820);
-    const ow=ctx.measureText(fmt(d.old_price)).width;
-    ctx.strokeStyle="#FF6B00";ctx.lineWidth=3;
-    ctx.beginPath();ctx.moveTo(1010-ow,806);ctx.lineTo(1010,806);ctx.stroke();
-
-    // Yeni fiyat
-    ctx.fillStyle="#FFF";ctx.font="bold 108px Arial";
-    ctx.shadowColor="#FF6B00";ctx.shadowBlur=18;
-    ctx.textAlign="right";ctx.fillText(fmt(d.new_price),1010,960);
-    ctx.shadowBlur=0;
-
-    // Alt bilgi
-    ctx.textAlign="center";ctx.fillStyle="#FF8A2A";ctx.font="bold 24px Arial";
-    ctx.fillText(dlbl+" TARİHLERİ ARASINDA GEÇERLİDİR",540,1040);
-
-    // İndir
-    const link=document.createElement("a");
-    link.download=d.title.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g,"").replace(/\s+/g,"-")+".png";
-    link.href=canvas.toDataURL("image/png");
-    link.click();
-
-  }catch(err){
-    console.error(err);
-    alert("Görsel oluşturulamadı. Hata: "+err.message);
+    ctx.fillStyle="#6B7280";
+    ctx.font="bold 42px Arial";
+    ctx.fillText("GÖRSEL YÜKLENEMEDİ",540,460);
   }
+
+  // İndirim rozeti - artık üst başlıkta değil, görselin sağ üstünde
+  const disc=d.old_price>0?Math.max(0,Math.round(((d.old_price-d.new_price)/d.old_price)*100)):0;
+
+  ctx.fillStyle="rgba(0,0,0,0.82)";
+  roundedPath(850,225,160,72,22);
+  ctx.fill();
+
+  ctx.strokeStyle="#FF6B00";
+  ctx.lineWidth=3;
+  ctx.stroke();
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#FFFFFF";
+  ctx.font="bold 42px Arial";
+  ctx.fillText("-%"+disc,930,273);
+
+  // Kategori
+  ctx.textAlign="left";
+  ctx.fillStyle="#FF7A00";
+  ctx.font="bold 26px Arial";
+  ctx.fillText(cap(d.category||"").toUpperCase(),70,760);
+
+  // Ürün adı
+  ctx.fillStyle="#FFFFFF";
+  ctx.font="bold 76px Arial";
+  drawWrappedText(String(d.title||"").toUpperCase(),70,860,560,82,2);
+
+  // Eski fiyat
+  const oldText=fmt(d.old_price);
+  ctx.textAlign="right";
+  ctx.fillStyle="#9CA3AF";
+  ctx.font="bold 48px Arial";
+  ctx.fillText(oldText,1010,820);
+
+  const oldW=ctx.measureText(oldText).width;
+  ctx.strokeStyle="#FF6B00";
+  ctx.lineWidth=4;
+  ctx.beginPath();
+  ctx.moveTo(1010-oldW,804);
+  ctx.lineTo(1010,804);
+  ctx.stroke();
+
+  // Yeni fiyat
+  const newText=fmt(d.new_price);
+  const priceSize=fitFont(newText,500,108,72);
+
+  ctx.textAlign="right";
+  ctx.fillStyle="#FFFFFF";
+  ctx.font=`bold ${priceSize}px Arial`;
+  ctx.shadowColor="#FF6B00";
+  ctx.shadowBlur=18;
+  ctx.fillText(newText,1010,960);
+  ctx.shadowBlur=0;
+
+  // Tarih sadece altta
+  const dlbl=dateRange(d.start_date,d.end_date);
+  const bottomText=dlbl+" TARİHLERİ ARASINDA GEÇERLİDİR";
+  const bottomSize=fitFont(bottomText,940,26,18);
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#FF7A00";
+  ctx.font=`bold ${bottomSize}px Arial`;
+  ctx.fillText(bottomText,540,1040);
+
+  // İndir
+  const link=document.createElement("a");
+  link.download=String(d.title||"kampanya")
+    .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g,"")
+    .replace(/\s+/g,"-")+".png";
+
+  link.href=canvas.toDataURL("image/png");
+  link.click();
 }
 
 // ========== BAŞLAT ==========
