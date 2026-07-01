@@ -848,20 +848,23 @@ async function dlPost(id){
     grd.addColorStop(1,"rgba(0,0,0,0.9)");
     ctx.fillStyle=grd;ctx.fillRect(40,200,1000,500);
 
-    // Market logosu (eğer varsa)
+    // Market logosu ve adı (üst kısım)
+    const headerY=110;
     if(biz?.logo_url){
       try{
         const logo=await loadImg(biz.logo_url);
-        const lh=100,lw=lh*(logo.width/logo.height);
-        ctx.drawImage(logo,(1080-lw)/2,50,lw,lh);
+        const lh=70,lw=lh*(logo.width/logo.height);
+        ctx.drawImage(logo,(1080-lw)/2,40,lw,lh);
+        // Logo altına market adı
+        ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 32px Arial";
+        ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,headerY+25);
       }catch(e){
-        // Logo yüklenemezse market adı yaz
-        ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 64px Arial";
-        ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,130);
+        ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 42px Arial";
+        ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,90);
       }
     }else{
-      ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 64px Arial";
-      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,130);
+      ctx.textAlign="center";ctx.fillStyle="#FFF";ctx.font="bold 42px Arial";
+      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,90);
     }
 
     // Turuncu çizgi
