@@ -813,6 +813,7 @@ async function saveBranch(){
 // ========== INSTAGRAM POST İNDİR ==========
 async function dlPost(id){
   const{data:d,error}=await client.from("deals").select("*").eq("id",id).single();
+
   if(error||!d){
     alert("Kampanya bulunamadı.");
     return;
@@ -823,15 +824,15 @@ async function dlPost(id){
   canvas.height=1080;
   const ctx=canvas.getContext("2d");
 
-  // Görsel yükleme yardımcıları
+  // ---------- Yardımcılar ----------
   const cleanUrl=(url)=>String(url||"").replace(/^https?:\/\//,"");
 
   const productProxy=(url)=>{
-    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=1200&h=650&fit=cover&output=jpg&q=90";
+    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=1400&h=1000&fit=cover&output=jpg&q=95";
   };
 
   const logoProxy=(url)=>{
-    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=700&output=png&q=90";
+    return "https://images.weserv.nl/?url="+encodeURIComponent(cleanUrl(url))+"&w=900&output=png&q=95";
   };
 
   const loadImg=(url)=>new Promise((res,rej)=>{
@@ -849,17 +850,34 @@ async function dlPost(id){
     ctx.drawImage(img,x+(w-sw)/2,y+(h-sh)/2,sw,sh);
   }
 
-  function fitFont(text,maxWidth,startSize,minSize){
+  function fitFont(text,maxWidth,startSize,minSize,fontFamily){
     let size=startSize;
     while(size>=minSize){
-      ctx.font=`bold ${size}px Arial`;
+      ctx.font=`900 ${size}px ${fontFamily}`;
       if(ctx.measureText(text).width<=maxWidth)return size;
       size-=2;
     }
     return minSize;
   }
 
-  function drawWrappedText(text,x,y,maxWidth,lineHeight,maxLines){
+  function parseTitle(title){
+    let t=String(title||"").trim();
+
+    let unit="";
+    const m=t.match(/\((.*?)\)/);
+    if(m){
+      unit=m[1].toUpperCase();
+      t=t.replace(m[0],"").trim();
+    }
+
+    return {
+      name:t.toUpperCase(),
+      unit:unit
+    };
+  }
+
+  function drawWrapped(text,x,y,maxWidth,lineHeight,maxLines,size){
+    ctx.font=`900 ${size}px Impact, Arial Black, Arial`;
     const words=String(text||"").split(" ");
     let line="";
     const lines=[];
@@ -869,166 +887,295 @@ async function dlPost(id){
       if(ctx.measureText(test).width>maxWidth&&line){
         lines.push(line.trim());
         line=words[i]+" ";
-        if(lines.length===maxLines-1)break;
+        if(lines.length===maxLines-1){
+          const rest=words.slice(i).join(" ");
+          line=rest;
+          break;
+        }
       }else{
         line=test;
       }
     }
 
-    if(line&&lines.length<maxLines){
-      lines.push(line.trim());
-    }
+    if(line)lines.push(line.trim());
 
-    lines.forEach((l,i)=>{
+    lines.slice(0,maxLines).forEach((l,i)=>{
       ctx.fillText(l,x,y+(i*lineHeight));
     });
+
+    return y+(Math.min(lines.length,maxLines)*lineHeight);
   }
 
-  function roundedPath(x,y,w,h,r){
+  function priceParts(n){
+    const s=Number(n||0).toLocaleString("tr-TR",{
+      minimumFractionDigits:2,
+      maximumFractionDigits:2
+    });
+    const p=s.split(",");
+    return {
+      lira:p[0],
+      kurus:p[1]||"00"
+    };
+  }
+
+  function drawPaintPriceBox(x,y,w,h){
+    // Ana sarı alan
+    ctx.fillStyle="#FFD400";
+    ctx.fillRect(x+20,y,w-40,h);
+
+    // Sol/sağ fırça gibi çıkıntılar
     ctx.beginPath();
-    if(ctx.roundRect){
-      ctx.roundRect(x,y,w,h,r);
-    }else{
-      ctx.rect(x,y,w,h);
+    ctx.moveTo(x+20,y);
+    ctx.lineTo(x+w-20,y);
+    ctx.lineTo(x+w,y+15);
+    ctx.lineTo(x+w-10,y+35);
+    ctx.lineTo(x+w,y+55);
+    ctx.lineTo(x+w-18,y+h);
+    ctx.lineTo(x+15,y+h);
+    ctx.lineTo(x,y+h-18);
+    ctx.lineTo(x+12,y+h-45);
+    ctx.lineTo(x,y+22);
+    ctx.closePath();
+    ctx.fill();
+
+    // Siyah küçük fırça çizgileri
+    ctx.fillStyle="rgba(0,0,0,0.18)";
+    for(let i=0;i<12;i++){
+      const yy=y+10+(i*8);
+      ctx.fillRect(x+5,yy,40+(i%3)*15,4);
+      ctx.fillRect(x+w-55,yy,45+(i%2)*15,4);
     }
   }
 
-  // Arka plan
-  ctx.fillStyle="#05070D";
+  function drawPrice(x,y,price,maxWidth){
+    const p=priceParts(price);
+
+    ctx.textAlign="left";
+    ctx.fillStyle="#000000";
+
+    let mainSize=125;
+    ctx.font=`900 ${mainSize}px Impact, Arial Black, Arial`;
+
+    while(ctx.measureText(p.lira).width>maxWidth-190&&mainSize>80){
+      mainSize-=4;
+      ctx.font=`900 ${mainSize}px Impact, Arial Black, Arial`;
+    }
+
+    ctx.fillText(p.lira,x,y);
+
+    const liraW=ctx.measureText(p.lira).width;
+
+    ctx.font=`900 ${Math.round(mainSize*0.52)}px Impact, Arial Black, Arial`;
+    ctx.fillText(","+p.kurus,x+liraW+12,y-4);
+
+    const kurusW=ctx.measureText(","+p.kurus).width;
+
+    ctx.font=`900 ${Math.round(mainSize*0.48)}px Arial Black, Arial`;
+    ctx.fillText("₺",x+liraW+kurusW+30,y-4);
+  }
+
+  function drawOldPrice(x,y,price){
+    const txt=fmt(price);
+    ctx.textAlign="left";
+    ctx.font="bold 34px Arial";
+    ctx.fillStyle="rgba(255,255,255,0.75)";
+    ctx.fillText(txt,x,y);
+
+    const w=ctx.measureText(txt).width;
+    ctx.strokeStyle="#FFD400";
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(x,y-12);
+    ctx.lineTo(x+w,y-12);
+    ctx.stroke();
+  }
+
+  function drawFeatureIcon(x,y){
+    ctx.strokeStyle="#FFD400";
+    ctx.lineWidth=4;
+
+    // Basit yaprak/başak ikonu
+    ctx.beginPath();
+    ctx.moveTo(x,y+45);
+    ctx.lineTo(x,y);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(x-12,y+15,10,20,-0.8,0,Math.PI*2);
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.ellipse(x+12,y+30,10,20,0.8,0,Math.PI*2);
+    ctx.stroke();
+  }
+
+  function sloganFor(cat){
+    const c=String(cat||"").toLowerCase();
+
+    if(c.includes("manav"))return ["TAZE","DOĞAL","LEZZETLİ"];
+    if(c.includes("kasap"))return ["GÜNLÜK","TAZE","KALİTELİ"];
+    if(c.includes("sut")||c.includes("süt"))return ["KALİTELİ","LEZZETLİ","BEREKETLİ"];
+    if(c.includes("bakliyat"))return ["KALİTELİ","LEZZETLİ","BEREKETLİ"];
+    if(c.includes("temizlik"))return ["GÜÇLÜ","ETKİLİ","EKONOMİK"];
+
+    return ["FIRSAT","KALİTE","UYGUN FİYAT"];
+  }
+
+  // ---------- Arka plan ----------
+  ctx.fillStyle="#030303";
   ctx.fillRect(0,0,1080,1080);
 
-  // Üst bölüm: sadece logo
+  // Hafif sarı ışık
+  const glow=ctx.createRadialGradient(820,520,20,820,520,560);
+  glow.addColorStop(0,"rgba(255,212,0,0.26)");
+  glow.addColorStop(0.45,"rgba(255,140,0,0.10)");
+  glow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,1080,1080);
+
+  // Ürün görseli
+  let productImg=null;
+
+  try{
+    productImg=await loadImg(productProxy(d.image_url));
+
+    // Arka planda bulanık ürün görseli
+    ctx.save();
+    ctx.globalAlpha=0.35;
+    ctx.filter="blur(10px)";
+    drawCover(productImg,0,150,1080,740);
+    ctx.restore();
+    ctx.filter="none";
+
+    // Sağ tarafa daha net ürün görseli
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(330,175,720,680);
+    ctx.clip();
+    drawCover(productImg,330,175,720,680);
+    ctx.restore();
+
+    // Sol yazı tarafını koyulaştır
+    const leftShade=ctx.createLinearGradient(0,0,760,0);
+    leftShade.addColorStop(0,"rgba(0,0,0,0.95)");
+    leftShade.addColorStop(0.55,"rgba(0,0,0,0.78)");
+    leftShade.addColorStop(1,"rgba(0,0,0,0.05)");
+    ctx.fillStyle=leftShade;
+    ctx.fillRect(0,130,900,780);
+
+    // Alt koyu geçiş
+    const bottomShade=ctx.createLinearGradient(0,620,0,1080);
+    bottomShade.addColorStop(0,"rgba(0,0,0,0)");
+    bottomShade.addColorStop(0.55,"rgba(0,0,0,0.80)");
+    bottomShade.addColorStop(1,"rgba(0,0,0,1)");
+    ctx.fillStyle=bottomShade;
+    ctx.fillRect(0,560,1080,520);
+
+  }catch(e){
+    ctx.fillStyle="#111111";
+    ctx.fillRect(0,150,1080,700);
+
+    ctx.textAlign="center";
+    ctx.fillStyle="#777";
+    ctx.font="bold 42px Arial";
+    ctx.fillText("ÜRÜN GÖRSELİ YÜKLENEMEDİ",540,500);
+  }
+
+  // ---------- Logo ----------
   if(biz?.logo_url){
     try{
       const logo=await loadImg(logoProxy(biz.logo_url));
 
-      const maxW=430;
-      const maxH=105;
+      const maxW=720;
+      const maxH=120;
       const scale=Math.min(maxW/logo.width,maxH/logo.height);
       const lw=logo.width*scale;
       const lh=logo.height*scale;
 
       ctx.drawImage(logo,(1080-lw)/2,35,lw,lh);
     }catch(e){
-      // Logo hiç yüklenemezse yazı göster
       ctx.textAlign="center";
-      ctx.fillStyle="#FFFFFF";
-      ctx.font="bold 52px Arial";
-      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,100);
+      ctx.fillStyle="#FFD400";
+      ctx.font="900 64px Arial Black, Arial";
+      ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,105);
     }
   }else{
     ctx.textAlign="center";
-    ctx.fillStyle="#FFFFFF";
-    ctx.font="bold 52px Arial";
-    ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,100);
+    ctx.fillStyle="#FFD400";
+    ctx.font="900 64px Arial Black, Arial";
+    ctx.fillText((biz?.name||"MARKET").toUpperCase(),540,105);
   }
 
-  // Turuncu çizgi
-  ctx.strokeStyle="#FF6B00";
-  ctx.lineWidth=3;
-  ctx.beginPath();
-  ctx.moveTo(340,165);
-  ctx.lineTo(740,165);
-  ctx.stroke();
+  // ---------- Ürün adı ----------
+  const parsed=parseTitle(d.title);
 
-  // Ürün görseli
-  const imgX=40;
-  const imgY=200;
-  const imgW=1000;
-  const imgH=500;
-
-  try{
-    const img=await loadImg(productProxy(d.image_url));
-
-    ctx.save();
-    roundedPath(imgX,imgY,imgW,imgH,14);
-    ctx.clip();
-    drawCover(img,imgX,imgY,imgW,imgH);
-
-    // Görsel üstüne hafif karartma
-    const grd=ctx.createLinearGradient(0,imgY,0,imgY+imgH);
-    grd.addColorStop(0,"rgba(0,0,0,0.05)");
-    grd.addColorStop(0.65,"rgba(0,0,0,0.15)");
-    grd.addColorStop(1,"rgba(0,0,0,0.65)");
-    ctx.fillStyle=grd;
-    ctx.fillRect(imgX,imgY,imgW,imgH);
-
-    ctx.restore();
-  }catch(e){
-    ctx.fillStyle="#111827";
-    roundedPath(imgX,imgY,imgW,imgH,14);
-    ctx.fill();
-    ctx.textAlign="center";
-    ctx.fillStyle="#6B7280";
-    ctx.font="bold 42px Arial";
-    ctx.fillText("GÖRSEL YÜKLENEMEDİ",540,460);
-  }
-
-  // İndirim rozeti - artık üst başlıkta değil, görselin sağ üstünde
-  const disc=d.old_price>0?Math.max(0,Math.round(((d.old_price-d.new_price)/d.old_price)*100)):0;
-
-  ctx.fillStyle="rgba(0,0,0,0.82)";
-  roundedPath(850,225,160,72,22);
-  ctx.fill();
-
-  ctx.strokeStyle="#FF6B00";
-  ctx.lineWidth=3;
-  ctx.stroke();
-
-  ctx.textAlign="center";
-  ctx.fillStyle="#FFFFFF";
-  ctx.font="bold 42px Arial";
-  ctx.fillText("-%"+disc,930,273);
-
-  // Kategori
   ctx.textAlign="left";
-  ctx.fillStyle="#FF7A00";
-  ctx.font="bold 26px Arial";
-  ctx.fillText(cap(d.category||"").toUpperCase(),70,760);
-
-  // Ürün adı
   ctx.fillStyle="#FFFFFF";
-  ctx.font="bold 76px Arial";
-  drawWrappedText(String(d.title||"").toUpperCase(),70,860,560,82,2);
 
-  // Eski fiyat
-  const oldText=fmt(d.old_price);
-  ctx.textAlign="right";
-  ctx.fillStyle="#9CA3AF";
-  ctx.font="bold 48px Arial";
-  ctx.fillText(oldText,1010,820);
+  let titleSize=88;
+  titleSize=fitFont(parsed.name,420,88,56,"Impact, Arial Black, Arial");
 
-  const oldW=ctx.measureText(oldText).width;
-  ctx.strokeStyle="#FF6B00";
-  ctx.lineWidth=4;
-  ctx.beginPath();
-  ctx.moveTo(1010-oldW,804);
-  ctx.lineTo(1010,804);
-  ctx.stroke();
+  const titleEndY=drawWrapped(parsed.name,55,310,440,96,3,titleSize);
+
+  // Birim
+  if(parsed.unit){
+    ctx.fillStyle="#FFD400";
+    ctx.font="900 70px Impact, Arial Black, Arial";
+    ctx.fillText(parsed.unit,55,titleEndY+25);
+
+    ctx.strokeStyle="#FFD400";
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(55,titleEndY+58);
+    ctx.lineTo(180,titleEndY+58);
+    ctx.stroke();
+  }
+
+  // ---------- Slogan ----------
+  const slogans=sloganFor(d.category);
+
+  drawFeatureIcon(70,610);
+
+  ctx.textAlign="left";
+  ctx.fillStyle="#FFFFFF";
+  ctx.font="900 28px Arial Black, Arial";
+  ctx.fillText(slogans[0],115,620);
+  ctx.fillText(slogans[1],115,655);
+  ctx.fillText(slogans[2],115,690);
+
+  // ---------- Eski fiyat ----------
+  drawOldPrice(60,835,d.old_price);
+
+  // ---------- Sarı fiyat bandı ----------
+  drawPaintPriceBox(40,860,610,145);
 
   // Yeni fiyat
-  const newText=fmt(d.new_price);
-  const priceSize=fitFont(newText,500,108,72);
+  drawPrice(75,977,d.new_price,560);
 
-  ctx.textAlign="right";
-  ctx.fillStyle="#FFFFFF";
-  ctx.font=`bold ${priceSize}px Arial`;
-  ctx.shadowColor="#FF6B00";
-  ctx.shadowBlur=18;
-  ctx.fillText(newText,1010,960);
-  ctx.shadowBlur=0;
+  // ---------- Küçük indirim bilgisi ----------
+  const disc=d.old_price>0?Math.max(0,Math.round(((d.old_price-d.new_price)/d.old_price)*100)):0;
 
-  // Tarih sadece altta
+  if(disc>0){
+    ctx.textAlign="center";
+    ctx.fillStyle="#FFD400";
+    ctx.font="900 34px Arial Black, Arial";
+    ctx.fillText("-%"+disc,950,915);
+
+    ctx.font="bold 20px Arial";
+    ctx.fillStyle="#FFFFFF";
+    ctx.fillText("İNDİRİM",950,945);
+  }
+
+  // ---------- Tarih sadece altta ----------
   const dlbl=dateRange(d.start_date,d.end_date);
   const bottomText=dlbl+" TARİHLERİ ARASINDA GEÇERLİDİR";
-  const bottomSize=fitFont(bottomText,940,26,18);
 
   ctx.textAlign="center";
-  ctx.fillStyle="#FF7A00";
-  ctx.font=`bold ${bottomSize}px Arial`;
-  ctx.fillText(bottomText,540,1040);
+  ctx.fillStyle="#FFD400";
+  ctx.font="bold 24px Arial";
+  ctx.fillText(bottomText,540,1050);
 
-  // İndir
+  // ---------- İndir ----------
   const link=document.createElement("a");
   link.download=String(d.title||"kampanya")
     .replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g,"")
