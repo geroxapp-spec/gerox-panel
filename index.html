@@ -762,9 +762,10 @@ function openBModal(){
         );
         const data=await r.json();
         if(data&&data.address){
-          $("bm-city").value=data.address.city||data.address.town||data.address.province||"";
-          $("bm-dist").value=data.address.county||data.address.district||"";
-          $("bm-neigh").value=data.address.suburb||data.address.neighbourhood||data.address.quarter||"";
+          const adr=data.address;
+          $("bm-city").value=adr.province||adr.state||adr.city||"";
+          $("bm-dist").value=(adr.county&&adr.county!==adr.city)?adr.county:(adr.town&&adr.town!==adr.city?adr.town:"");
+          $("bm-neigh").value=adr.suburb||adr.neighbourhood||adr.quarter||adr.city_district||"";
           $("bm-addr").value=data.display_name||"";
         }
       }catch(err){
