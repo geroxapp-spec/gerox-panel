@@ -3,38 +3,51 @@ import {C,money,splitMoney,rr} from "./utils.js";
 function drawBrush(ctx,x,y,w,h){
   ctx.save();
 
-  ctx.shadowColor="rgba(255,212,0,0.32)";
-  ctx.shadowBlur=22;
+  ctx.shadowColor="rgba(255,212,0,0.34)";
+  ctx.shadowBlur=24;
   ctx.shadowOffsetY=10;
 
-  ctx.fillStyle=C.gold;
+  const grad=ctx.createLinearGradient(0,y,0,y+h);
+  grad.addColorStop(0,"#FFE96A");
+  grad.addColorStop(0.45,"#FFD400");
+  grad.addColorStop(1,"#D9AE00");
+
+  ctx.fillStyle=grad;
 
   ctx.beginPath();
-  ctx.moveTo(x+26,y);
-  ctx.lineTo(x+w-42,y+4);
+  ctx.moveTo(x+28,y);
+  ctx.lineTo(x+w-42,y+5);
   ctx.lineTo(x+w,y+30);
-  ctx.lineTo(x+w-16,y+62);
-  ctx.lineTo(x+w,y+96);
+  ctx.lineTo(x+w-15,y+61);
+  ctx.lineTo(x+w,y+92);
   ctx.lineTo(x+w-36,y+h);
-  ctx.lineTo(x+28,y+h);
-  ctx.lineTo(x,y+h-25);
+  ctx.lineTo(x+30,y+h);
+  ctx.lineTo(x,y+h-26);
   ctx.lineTo(x+14,y+h-62);
-  ctx.lineTo(x,y+26);
+  ctx.lineTo(x,y+27);
   ctx.closePath();
   ctx.fill();
 
   ctx.restore();
 
+  // Fırça dokusu
   ctx.save();
   ctx.fillStyle="rgba(0,0,0,0.14)";
 
   for(let i=0;i<12;i++){
-    const yy=y+12+i*10;
+    const yy=y+13+i*9;
 
     ctx.fillRect(x+12,yy,54+(i%3)*13,4);
     ctx.fillRect(x+w-92,yy,62+(i%2)*17,4);
   }
 
+  ctx.restore();
+
+  // Üst ince parlama
+  ctx.save();
+  ctx.globalAlpha=0.32;
+  ctx.fillStyle="#FFFFFF";
+  ctx.fillRect(x+55,y+10,w-120,3);
   ctx.restore();
 }
 
@@ -43,7 +56,7 @@ function drawOldPrice(ctx,x,y,oldPrice){
 
   ctx.textAlign="left";
   ctx.font="bold 34px Arial";
-  ctx.fillStyle="rgba(255,255,255,0.76)";
+  ctx.fillStyle="rgba(255,255,255,0.78)";
   ctx.fillText(txt,x,y);
 
   const w=ctx.measureText(txt).width;
@@ -59,9 +72,9 @@ function drawOldPrice(ctx,x,y,oldPrice){
 function drawNewPrice(ctx,x,y,price,maxWidth){
   const p=splitMoney(price);
 
-  let size=126;
+  let size=122;
 
-  while(size>78){
+  while(size>76){
     ctx.font="900 "+size+"px Impact, Arial Black, Arial";
     const w1=ctx.measureText(p.lira).width;
 
@@ -71,7 +84,9 @@ function drawNewPrice(ctx,x,y,price,maxWidth){
     ctx.font="900 "+Math.round(size*0.46)+"px Arial Black, Arial";
     const w3=ctx.measureText("₺").width;
 
-    if(w1+w2+w3+60<=maxWidth)break;
+    if(w1+w2+w3+62<=maxWidth){
+      break;
+    }
 
     size-=4;
   }
@@ -94,11 +109,14 @@ function drawNewPrice(ctx,x,y,price,maxWidth){
 }
 
 export function drawPriceBlock(ctx,deal){
-  drawOldPrice(ctx,65,820,deal.old_price);
+  // Eski fiyat
+  drawOldPrice(ctx,68,822,deal.old_price);
 
-  drawBrush(ctx,48,842,650,150);
+  // Ana sarı fiyat bandı
+  drawBrush(ctx,48,846,645,142);
 
-  drawNewPrice(ctx,82,962,deal.new_price,570);
+  // Yeni fiyat
+  drawNewPrice(ctx,82,962,deal.new_price,565);
 
   const old=Number(deal.old_price||0);
   const nw=Number(deal.new_price||0);
@@ -107,22 +125,27 @@ export function drawPriceBlock(ctx,deal){
   if(disc>0){
     ctx.save();
 
-    rr(ctx,840,842,175,112,28);
-    ctx.fillStyle="rgba(0,0,0,0.62)";
+    rr(ctx,842,858,174,104,26);
+    ctx.fillStyle="rgba(0,0,0,0.68)";
     ctx.fill();
 
-    ctx.strokeStyle="rgba(255,212,0,0.45)";
+    ctx.strokeStyle="rgba(255,212,0,0.55)";
     ctx.lineWidth=2;
     ctx.stroke();
 
+    ctx.shadowColor="rgba(255,212,0,0.25)";
+    ctx.shadowBlur=12;
+
     ctx.textAlign="center";
     ctx.fillStyle=C.gold;
-    ctx.font="900 42px Arial Black, Arial";
-    ctx.fillText("-%"+disc,928,895);
+    ctx.font="900 40px Arial Black, Arial";
+    ctx.fillText("-%"+disc,929,910);
+
+    ctx.shadowBlur=0;
 
     ctx.fillStyle=C.white;
     ctx.font="bold 21px Arial";
-    ctx.fillText("İNDİRİM",928,925);
+    ctx.fillText("İNDİRİM",929,938);
 
     ctx.restore();
   }
