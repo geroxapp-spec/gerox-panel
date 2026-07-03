@@ -3,24 +3,17 @@ import {C,money,splitMoney,rr} from "./utils.js";
 function drawPriceTag(ctx,x,y,w,h){
   ctx.save();
 
-  // Daha sade, temiz fiyat etiketi
-  ctx.shadowColor="rgba(255,212,0,0.22)";
+  ctx.shadowColor="rgba(255,212,0,0.28)";
   ctx.shadowBlur=18;
   ctx.shadowOffsetY=8;
 
-  const grad=ctx.createLinearGradient(0,y,0,y+h);
-  grad.addColorStop(0,"#FFE36A");
-  grad.addColorStop(0.52,"#FFD400");
-  grad.addColorStop(1,"#CFA900");
+  ctx.fillStyle=C.gold;
 
-  ctx.fillStyle=grad;
-
-  // Daha temiz, fırça gibi değil etiket gibi
   ctx.beginPath();
   ctx.moveTo(x+24,y);
-  ctx.lineTo(x+w-42,y);
+  ctx.lineTo(x+w-46,y);
   ctx.lineTo(x+w,y+h/2);
-  ctx.lineTo(x+w-42,y+h);
+  ctx.lineTo(x+w-46,y+h);
   ctx.lineTo(x+24,y+h);
   ctx.quadraticCurveTo(x,y+h,x,y+h-24);
   ctx.lineTo(x,y+24);
@@ -29,34 +22,20 @@ function drawPriceTag(ctx,x,y,w,h){
   ctx.fill();
 
   ctx.restore();
-
-  // İnce üst parlama
-  ctx.save();
-  ctx.globalAlpha=0.28;
-  ctx.fillStyle="#FFFFFF";
-  ctx.fillRect(x+55,y+10,w-120,3);
-  ctx.restore();
-
-  // Çok ince koyu alt çizgi, etiketi oturtur
-  ctx.save();
-  ctx.globalAlpha=0.12;
-  ctx.fillStyle="#000000";
-  ctx.fillRect(x+40,y+h-8,w-105,4);
-  ctx.restore();
 }
 
 function drawOldPrice(ctx,x,y,oldPrice){
   const txt=money(oldPrice);
 
   ctx.textAlign="left";
-  ctx.font="bold 32px Arial";
-  ctx.fillStyle="rgba(255,255,255,0.72)";
+  ctx.font="600 32px Arial";
+  ctx.fillStyle="rgba(255,255,255,0.65)";
   ctx.fillText(txt,x,y);
 
   const w=ctx.measureText(txt).width;
 
   ctx.strokeStyle=C.gold;
-  ctx.lineWidth=4;
+  ctx.lineWidth=3;
   ctx.beginPath();
   ctx.moveTo(x,y-11);
   ctx.lineTo(x+w,y-11);
@@ -66,53 +45,46 @@ function drawOldPrice(ctx,x,y,oldPrice){
 function drawNewPrice(ctx,x,y,price,maxWidth){
   const p=splitMoney(price);
 
-  // Impact yerine Arial kullandık.
-  // Daha az kalın, daha temiz durur.
-  let size=106;
+  let size=104;
 
-  while(size>70){
-    ctx.font="bold "+size+"px Arial";
+  while(size>66){
+    ctx.font="800 "+size+"px Arial";
     const w1=ctx.measureText(p.lira).width;
 
-    ctx.font="bold "+Math.round(size*0.52)+"px Arial";
+    ctx.font="800 "+Math.round(size*0.5)+"px Arial";
     const w2=ctx.measureText(","+p.kurus).width;
 
-    ctx.font="bold "+Math.round(size*0.46)+"px Arial";
+    ctx.font="700 "+Math.round(size*0.42)+"px Arial";
     const w3=ctx.measureText("₺").width;
 
-    if(w1+w2+w3+62<=maxWidth){
-      break;
-    }
+    if(w1+w2+w3+50<=maxWidth)break;
 
     size-=4;
   }
 
   ctx.textAlign="left";
-  ctx.fillStyle="#000000";
+  ctx.fillStyle="#141414";
 
-  ctx.font="bold "+size+"px Arial";
+  ctx.font="800 "+size+"px Arial";
   ctx.fillText(p.lira,x,y);
 
   const w1=ctx.measureText(p.lira).width;
 
-  ctx.font="bold "+Math.round(size*0.52)+"px Arial";
-  ctx.fillText(","+p.kurus,x+w1+12,y-5);
+  ctx.font="800 "+Math.round(size*0.5)+"px Arial";
+  ctx.fillText(","+p.kurus,x+w1+10,y-4);
 
   const w2=ctx.measureText(","+p.kurus).width;
 
-  ctx.font="bold "+Math.round(size*0.46)+"px Arial";
-  ctx.fillText("₺",x+w1+w2+30,y-5);
+  ctx.font="700 "+Math.round(size*0.42)+"px Arial";
+  ctx.fillText("₺",x+w1+w2+26,y-4);
 }
 
 export function drawPriceBlock(ctx,deal){
-  // Eski fiyat
-  drawOldPrice(ctx,62,818,deal.old_price);
+  drawOldPrice(ctx,65,810,deal.old_price);
 
-  // Yeni sade fiyat etiketi
-  drawPriceTag(ctx,42,846,570,126);
+  drawPriceTag(ctx,48,835,600,140);
 
-  // Yeni fiyat, daha ince
-  drawNewPrice(ctx,78,940,deal.new_price,490);
+  drawNewPrice(ctx,82,935,deal.new_price,520);
 
   const old=Number(deal.old_price||0);
   const nw=Number(deal.new_price||0);
@@ -121,27 +93,22 @@ export function drawPriceBlock(ctx,deal){
   if(disc>0){
     ctx.save();
 
-    rr(ctx,840,858,176,106,26);
-    ctx.fillStyle="rgba(0,0,0,0.72)";
+    rr(ctx,840,842,175,112,28);
+    ctx.fillStyle="rgba(0,0,0,0.62)";
     ctx.fill();
 
-    ctx.strokeStyle="rgba(255,212,0,0.60)";
+    ctx.strokeStyle="rgba(255,212,0,0.45)";
     ctx.lineWidth=2;
     ctx.stroke();
 
-    ctx.shadowColor="rgba(255,212,0,0.22)";
-    ctx.shadowBlur=10;
-
     ctx.textAlign="center";
     ctx.fillStyle=C.gold;
-    ctx.font="800 38px Arial Black, Arial";
-    ctx.fillText("-%"+disc,928,910);
-
-    ctx.shadowBlur=0;
+    ctx.font="900 42px Arial Black, Arial";
+    ctx.fillText("-%"+disc,928,895);
 
     ctx.fillStyle=C.white;
-    ctx.font="600 21px Arial";
-    ctx.fillText("İNDİRİM",928,938);
+    ctx.font="bold 21px Arial";
+    ctx.fillText("İNDİRİM",928,925);
 
     ctx.restore();
   }
