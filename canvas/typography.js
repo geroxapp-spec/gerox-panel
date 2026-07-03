@@ -1,4 +1,4 @@
-import {C,upperTR,wrapLines,rr} from "./utils.js";
+import {C,upperTR,wrapLines} from "./utils.js";
 
 const CATEGORY_LABELS={
   manav:"MANAV",
@@ -59,55 +59,31 @@ function drawLeaf(ctx,x,y){
   ctx.lineCap="round";
 
   ctx.beginPath();
-  ctx.moveTo(x,y+40);
-  ctx.quadraticCurveTo(x+28,y+8,x+58,y+38);
+  ctx.moveTo(x,y+42);
+  ctx.quadraticCurveTo(x+32,y+8,x+66,y+42);
   ctx.stroke();
 
   ctx.beginPath();
-  ctx.moveTo(x,y+40);
-  ctx.quadraticCurveTo(x+14,y-8,x+38,y+4);
+  ctx.moveTo(x,y+42);
+  ctx.quadraticCurveTo(x+16,y-10,x+42,y+4);
   ctx.stroke();
 
   ctx.restore();
 }
 
 export function drawProductInfo(ctx,deal){
-  const panel={
-    x:42,
-    y:205,
-    w:320,
-    h:540
-  };
-
-  // Sol bilgi paneli
-  ctx.save();
-
-  rr(ctx,panel.x,panel.y,panel.w,panel.h,30);
-  ctx.fillStyle="rgba(0,0,0,0.80)";
-  ctx.fill();
-
-  ctx.strokeStyle="rgba(255,212,0,0.22)";
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-
-  // Panel sol altın çizgi
-  ctx.fillStyle="rgba(255,212,0,0.90)";
-  ctx.fillRect(panel.x+1,panel.y+38,5,130);
-
-  ctx.restore();
+  const parsed=parseTitle(deal.title);
 
   ctx.textAlign="left";
 
   // Kategori
   ctx.fillStyle=C.gold;
-  ctx.font="900 27px Arial Black, Arial";
-  ctx.fillText(categoryLabel(deal.category),70,260);
-
-  const parsed=parseTitle(deal.title);
+  ctx.font="900 30px Arial Black, Arial";
+  ctx.fillText(categoryLabel(deal.category),55,250);
 
   // Ürün adı
-  const titleMaxWidth=275;
-  let titleSize=86;
+  const titleMaxWidth=430;
+  let titleSize=92;
   let lines=[];
 
   while(titleSize>=56){
@@ -123,61 +99,61 @@ export function drawProductInfo(ctx,deal){
       }
     }
 
-    const totalHeight=lines.length*(titleSize+8);
-
-    if(ok&&totalHeight<=225){
+    if(ok){
       break;
     }
 
-    titleSize-=3;
+    titleSize-=4;
   }
 
   ctx.fillStyle=C.white;
   ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
 
-  ctx.shadowColor="rgba(0,0,0,0.90)";
-  ctx.shadowBlur=12;
+  ctx.shadowColor="rgba(0,0,0,0.95)";
+  ctx.shadowBlur=14;
 
   let y=340;
 
   for(let i=0;i<lines.length;i++){
-    ctx.fillText(lines[i],70,y);
+    ctx.fillText(lines[i],55,y);
     y+=titleSize+8;
   }
 
   ctx.shadowBlur=0;
 
   // Birim
-  const unitY=Math.min(y+18,565);
+  const unitY=y+25;
 
   if(parsed.unit){
     ctx.fillStyle=C.gold;
-    ctx.font="900 70px Impact, Arial Black, Arial";
-    ctx.fillText(parsed.unit,70,unitY);
+    ctx.font="900 78px Impact, Arial Black, Arial";
+    ctx.fillText(parsed.unit,55,unitY);
 
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(70,unitY+35);
-    ctx.lineTo(195,unitY+35);
+    ctx.moveTo(55,unitY+38);
+    ctx.lineTo(190,unitY+38);
     ctx.stroke();
   }else{
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(70,unitY+20);
-    ctx.lineTo(195,unitY+20);
+    ctx.moveTo(55,unitY+10);
+    ctx.lineTo(190,unitY+10);
     ctx.stroke();
   }
 
-  // Slogan bölümü
+  // Slogan
   const slogans=sloganFor(deal.category);
 
-  drawLeaf(ctx,72,618);
+  const sloganY=620;
+
+  drawLeaf(ctx,55,sloganY-35);
 
   ctx.fillStyle=C.white;
   ctx.font="900 28px Arial Black, Arial";
-  ctx.fillText(slogans[0],125,640);
-  ctx.fillText(slogans[1],125,675);
-  ctx.fillText(slogans[2],125,710);
+  ctx.fillText(slogans[0],115,sloganY);
+  ctx.fillText(slogans[1],115,sloganY+36);
+  ctx.fillText(slogans[2],115,sloganY+72);
 }
