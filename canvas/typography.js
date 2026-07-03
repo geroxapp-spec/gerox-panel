@@ -1,119 +1,222 @@
-import {C,upperTR,fitFont,wrapLines,rr} from "./utils.js";
+import { C, upperTR, wrapLines, rr } from "./utils.js";
+import { Layout } from "./layout.js";
 
-const CATEGORY_LABELS={
-  manav:"MANAV",
-  kasap:"KASAP",
-  sut:"SÜT ÜRÜNLERİ",
-  bakliyat:"BAKLİYAT",
-  cay:"ÇAY & KAHVE",
-  temizlik:"TEMİZLİK",
-  kisisel:"KİŞİSEL BAKIM"
+const CATEGORY_LABELS = {
+    manav: "MANAV",
+    kasap: "KASAP",
+    sut: "SÜT ÜRÜNLERİ",
+    bakliyat: "BAKLİYAT",
+    cay: "ÇAY & KAHVE",
+    temizlik: "TEMİZLİK",
+    kisisel: "KİŞİSEL BAKIM"
 };
 
-function categoryLabel(cat){
-  return CATEGORY_LABELS[String(cat||"").toLowerCase()]||upperTR(cat||"FIRSAT");
+function categoryLabel(cat) {
+
+    return CATEGORY_LABELS[String(cat || "").toLowerCase()]
+        || upperTR(cat || "FIRSAT");
+
 }
 
-function parseTitle(title){
-  let t=String(title||"").trim();
-  let unit="";
+function parseTitle(title) {
 
-  const m=t.match(/\(([^)]+)\)/);
+    let t = String(title || "").trim();
 
-  if(m){
-    unit=upperTR(m[1]);
-    t=t.replace(m[0],"").trim();
-  }else{
-    const m2=t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
+    let unit = "";
 
-    if(m2){
-      unit=upperTR(m2[1]);
-      t=t.replace(m2[0],"").trim();
+    const m = t.match(/\(([^)]+)\)/);
+
+    if (m) {
+
+        unit = upperTR(m[1]);
+
+        t = t.replace(m[0], "").trim();
+
+    } else {
+
+        const m2 = t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|ADET|PKT))$/i);
+
+        if (m2) {
+
+            unit = upperTR(m2[1]);
+
+            t = t.replace(m2[0], "").trim();
+
+        }
+
     }
-  }
 
-  return {
-    name:upperTR(t),
-    unit:unit
-  };
+    return {
+
+        name: upperTR(t),
+
+        unit
+
+    };
+
 }
 
-export function drawProductInfo(ctx,deal){
-  const panel={
-    x:42,
-    y:205,
-    w:505,
-    h:300
-  };
+export function drawProductInfo(ctx, deal) {
 
-  ctx.save();
-  rr(ctx,panel.x,panel.y,panel.w,panel.h,34);
-  ctx.fillStyle="rgba(0,0,0,0.26)";
-  ctx.fill();
+    const box = Layout.title;
 
-  ctx.strokeStyle="rgba(255,212,0,0.12)";
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-  ctx.restore();
+    // ===========================
+    // GLASS PANEL
+    // ===========================
 
-  ctx.textAlign="left";
+    ctx.save();
 
-  ctx.fillStyle=C.gold;
-  ctx.font="900 28px Arial Black, Arial";
-  ctx.fillText(categoryLabel(deal.category),70,260);
+    rr(
+        ctx,
+        box.x - 20,
+        box.y - 25,
+        box.w + 40,
+        270,
+        30
+    );
 
-  const parsed=parseTitle(deal.title);
+    const glass = ctx.createLinearGradient(
+        0,
+        box.y,
+        0,
+        box.y + 270
+    );
 
-  let titleSize=92;
-  let lines=[];
+    glass.addColorStop(0, "rgba(255,255,255,.05)");
+    glass.addColorStop(.5, "rgba(255,255,255,.02)");
+    glass.addColorStop(1, "rgba(255,255,255,.01)");
 
-  while(titleSize>=58){
-    lines=wrapLines(ctx,parsed.name,430,titleSize,"Impact, Arial Black, Arial",3);
+    ctx.fillStyle = glass;
 
-    let ok=true;
-    ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
+    ctx.fill();
 
-    for(let i=0;i<lines.length;i++){
-      if(ctx.measureText(lines[i]).width>430)ok=false;
+    ctx.strokeStyle = "rgba(255,212,0,.15)";
+    ctx.lineWidth = 2;
+
+    ctx.stroke();
+
+    ctx.restore();
+
+    // ===========================
+    // CATEGORY
+    // ===========================
+
+    ctx.textAlign = "left";
+
+    ctx.fillStyle = C.gold;
+
+    ctx.font = "700 26px Arial";
+
+    ctx.fillText(
+        categoryLabel(deal.category),
+        box.x,
+        box.y
+    );
+
+    // GOLD LINE
+
+    ctx.strokeStyle = C.gold;
+
+    ctx.lineWidth = 3;
+
+    ctx.beginPath();
+
+    ctx.moveTo(box.x, box.y + 18);
+
+    ctx.lineTo(box.x + 120, box.y + 18);
+
+    ctx.stroke();
+
+    // ===========================
+    // TITLE
+    // ===========================
+
+    const parsed = parseTitle(deal.title);
+
+    let font = 86;
+
+    let lines = [];
+
+    while (font > 52) {
+
+        lines = wrapLines(
+            ctx,
+            parsed.name,
+            box.w,
+            font,
+            "Arial Black",
+            3
+        );
+
+        if (lines.length <= 3)
+            break;
+
+        font -= 4;
+
     }
 
-    if(ok)break;
+    ctx.fillStyle = "#FFFFFF";
 
-    titleSize-=4;
-  }
+    ctx.strokeStyle = "rgba(0,0,0,.70)";
+    ctx.lineWidth = 8;
 
-  ctx.fillStyle=C.white;
-  ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
+    ctx.shadowColor = "rgba(0,0,0,.35)";
+    ctx.shadowBlur = 14;
 
-  ctx.shadowColor="rgba(0,0,0,0.85)";
-  ctx.shadowBlur=10;
+    ctx.font = `900 ${font}px Arial Black`;
 
-  let y=340;
+    let y = box.y + 78;
 
-  for(let i=0;i<lines.length;i++){
-    ctx.fillText(lines[i],70,y);
-    y+=titleSize+8;
-  }
+    for (const line of lines) {
 
-  ctx.shadowBlur=0;
+        ctx.strokeText(
+            line,
+            box.x,
+            y
+        );
 
-  if(parsed.unit){
-    ctx.fillStyle=C.gold;
-    ctx.font="900 72px Impact, Arial Black, Arial";
-    ctx.fillText(parsed.unit,70,y+18);
+        ctx.fillText(
+            line,
+            box.x,
+            y
+        );
 
-    ctx.strokeStyle=C.gold;
-    ctx.lineWidth=5;
-    ctx.beginPath();
-    ctx.moveTo(70,y+55);
-    ctx.lineTo(205,y+55);
-    ctx.stroke();
-  }else{
-    ctx.strokeStyle=C.gold;
-    ctx.lineWidth=5;
-    ctx.beginPath();
-    ctx.moveTo(70,y+20);
-    ctx.lineTo(205,y+20);
-    ctx.stroke();
-  }
+        y += font + 6;
+
+    }
+
+    ctx.shadowBlur = 0;
+
+    // ===========================
+    // UNIT
+    // ===========================
+
+    if (parsed.unit) {
+
+        ctx.fillStyle = C.gold;
+
+        ctx.font = "700 34px Arial";
+
+        ctx.fillText(
+            "(" + parsed.unit + ")",
+            box.x,
+            y + 10
+        );
+
+    }
+
+    // ===========================
+    // SLOGAN
+    // ===========================
+
+    ctx.fillStyle = "rgba(255,255,255,.55)";
+
+    ctx.font = "600 22px Arial";
+
+    ctx.fillText(
+        "Kaliteli • Ekonomik • Güvenilir",
+        box.x,
+        y + 52
+    );
+
 }
