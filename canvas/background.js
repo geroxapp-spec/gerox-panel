@@ -1,186 +1,161 @@
 import { cover, drawNoise } from "./utils.js";
+import { Layout } from "./layout.js";
 
 export function drawBackground(ctx, productImg) {
 
-    const W = 1080;
-    const H = 1080;
+    const W = Layout.canvas.width;
+    const H = Layout.canvas.height;
 
-    // =====================================================
-    // PREMIUM BLACK BACKGROUND
-    // =====================================================
+    // =========================
+    // BASE GRADIENT BACKGROUND
+    // =========================
 
     const bg = ctx.createLinearGradient(0, 0, 0, H);
 
-    bg.addColorStop(0, "#060606");
-    bg.addColorStop(.55, "#0d0d0d");
+    bg.addColorStop(0, "#050505");
+    bg.addColorStop(0.5, "#0b0b0b");
     bg.addColorStop(1, "#020202");
 
     ctx.fillStyle = bg;
-    ctx.fillRect(0,0,W,H);
+    ctx.fillRect(0, 0, W, H);
 
-    // =====================================================
-    // PRODUCT BLUR
-    // =====================================================
+    // =========================
+    // PRODUCT BLUR BACKGROUND LAYER
+    // =========================
 
-    if(productImg){
-
+    if (productImg) {
         ctx.save();
 
-        ctx.globalAlpha=.28;
-
-        ctx.filter="blur(28px) saturate(1.35) brightness(.95)";
+        ctx.globalAlpha = 0.25;
+        ctx.filter = "blur(30px) saturate(1.4) brightness(0.9)";
 
         cover(
             ctx,
             productImg,
-            -140,
-            70,
-            1380,
-            860,
-            .56,
-            .50
+            -160,
+            60,
+            W + 320,
+            H * 0.75,
+            0.5,
+            0.5
         );
 
         ctx.restore();
-
-        ctx.filter="none";
-
+        ctx.filter = "none";
     }
 
-    // =====================================================
-    // GOLD LIGHT
-    // =====================================================
+    // =========================
+    // GOLD MAIN LIGHT (RIGHT SIDE HERO)
+    // =========================
 
-    let light=ctx.createRadialGradient(
-        860,
-        360,
+    const light = ctx.createRadialGradient(
+        Layout.productGlow.x,
+        Layout.productGlow.y,
         30,
-        860,
-        360,
-        650
+        Layout.productGlow.x,
+        Layout.productGlow.y,
+        Layout.productGlow.radius
     );
 
-    light.addColorStop(0,"rgba(255,208,0,.34)");
-    light.addColorStop(.20,"rgba(255,190,0,.22)");
-    light.addColorStop(.45,"rgba(255,170,0,.10)");
-    light.addColorStop(1,"rgba(0,0,0,0)");
+    light.addColorStop(0, "rgba(255,210,0,0.35)");
+    light.addColorStop(0.3, "rgba(255,170,0,0.18)");
+    light.addColorStop(1, "rgba(0,0,0,0)");
 
-    ctx.fillStyle=light;
-    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = light;
+    ctx.fillRect(0, 0, W, H);
 
-    // =====================================================
-    // SECOND LIGHT
-    // =====================================================
+    // =========================
+    // SECOND LIGHT (CLEAN DEPTH)
+    // =========================
 
-    let light2=ctx.createRadialGradient(
-        260,
+    const light2 = ctx.createRadialGradient(
+        240,
         820,
-        20,
-        260,
+        10,
+        240,
         820,
         520
     );
 
-    light2.addColorStop(0,"rgba(255,255,255,.05)");
-    light2.addColorStop(.45,"rgba(255,255,255,.02)");
-    light2.addColorStop(1,"rgba(0,0,0,0)");
+    light2.addColorStop(0, "rgba(255,255,255,0.04)");
+    light2.addColorStop(1, "rgba(0,0,0,0)");
 
-    ctx.fillStyle=light2;
-    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = light2;
+    ctx.fillRect(0, 0, W, H);
 
-    // =====================================================
-    // TOP PANEL
-    // =====================================================
+    // =========================
+    // TOP DARK HEADER FADE
+    // =========================
 
-    let top=ctx.createLinearGradient(0,0,0,250);
+    const top = ctx.createLinearGradient(0, 0, 0, Layout.header.height);
 
-    top.addColorStop(0,"rgba(0,0,0,1)");
-    top.addColorStop(.55,"rgba(0,0,0,.95)");
-    top.addColorStop(1,"rgba(0,0,0,.35)");
+    top.addColorStop(0, "rgba(0,0,0,0.95)");
+    top.addColorStop(1, "rgba(0,0,0,0.2)");
 
-    ctx.fillStyle=top;
-    ctx.fillRect(0,0,W,260);
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, W, Layout.header.height);
 
-    // =====================================================
-    // LEFT PANEL
-    // =====================================================
+    // =========================
+    // LEFT INFO DEPTH LAYER
+    // =========================
 
-    let left=ctx.createLinearGradient(
-        0,
-        0,
-        700,
-        0
-    );
+    const left = ctx.createLinearGradient(0, 0, 650, 0);
 
-    left.addColorStop(0,"rgba(0,0,0,1)");
-    left.addColorStop(.55,"rgba(0,0,0,.90)");
-    left.addColorStop(.82,"rgba(0,0,0,.45)");
-    left.addColorStop(1,"rgba(0,0,0,0)");
+    left.addColorStop(0, "rgba(0,0,0,0.95)");
+    left.addColorStop(0.5, "rgba(0,0,0,0.85)");
+    left.addColorStop(1, "rgba(0,0,0,0)");
 
-    ctx.fillStyle=left;
-    ctx.fillRect(0,140,W,720);
+    ctx.fillStyle = left;
+    ctx.fillRect(0, 140, 700, 720);
 
-    // =====================================================
-    // BOTTOM
-    // =====================================================
+    // =========================
+    // BOTTOM SHADOW BASE
+    // =========================
 
-    let bottom=ctx.createLinearGradient(
-        0,
-        650,
-        0,
-        H
-    );
+    const bottom = ctx.createLinearGradient(0, H - 400, 0, H);
 
-    bottom.addColorStop(0,"rgba(0,0,0,0)");
-    bottom.addColorStop(.35,"rgba(0,0,0,.55)");
-    bottom.addColorStop(.70,"rgba(0,0,0,.88)");
-    bottom.addColorStop(1,"rgba(0,0,0,1)");
+    bottom.addColorStop(0, "rgba(0,0,0,0)");
+    bottom.addColorStop(0.4, "rgba(0,0,0,0.6)");
+    bottom.addColorStop(1, "rgba(0,0,0,1)");
 
-    ctx.fillStyle=bottom;
-    ctx.fillRect(0,560,W,520);
+    ctx.fillStyle = bottom;
+    ctx.fillRect(0, H - 420, W, 420);
 
-    // =====================================================
-    // GOLD STRIPE
-    // =====================================================
+    // =========================
+    // SUB GOLD LINE ACCENT
+    // =========================
 
-    let gold=ctx.createLinearGradient(
-        0,
-        0,
-        W,
-        0
-    );
+    const goldLine = ctx.createLinearGradient(0, 0, W, 0);
 
-    gold.addColorStop(0,"rgba(255,212,0,0)");
-    gold.addColorStop(.50,"rgba(255,212,0,.10)");
-    gold.addColorStop(1,"rgba(255,212,0,0)");
+    goldLine.addColorStop(0, "rgba(255,212,0,0)");
+    goldLine.addColorStop(0.5, "rgba(255,212,0,0.15)");
+    goldLine.addColorStop(1, "rgba(255,212,0,0)");
 
-    ctx.fillStyle=gold;
-    ctx.fillRect(0,165,W,4);
+    ctx.fillStyle = goldLine;
+    ctx.fillRect(0, 170, W, 2);
 
-    // =====================================================
+    // =========================
     // VIGNETTE
-    // =====================================================
+    // =========================
 
-    let vig=ctx.createRadialGradient(
-        540,
-        520,
-        280,
-        540,
-        520,
+    const vig = ctx.createRadialGradient(
+        W / 2,
+        H / 2,
+        200,
+        W / 2,
+        H / 2,
         900
     );
 
-    vig.addColorStop(0,"rgba(0,0,0,0)");
-    vig.addColorStop(.65,"rgba(0,0,0,.28)");
-    vig.addColorStop(1,"rgba(0,0,0,.86)");
+    vig.addColorStop(0, "rgba(0,0,0,0)");
+    vig.addColorStop(1, "rgba(0,0,0,0.75)");
 
-    ctx.fillStyle=vig;
-    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
 
-    // =====================================================
-    // FILM GRAIN
-    // =====================================================
+    // =========================
+    // NOISE TEXTURE
+    // =========================
 
-    drawNoise(ctx,W,H,.020);
-
+    drawNoise(ctx, W, H, 0.018);
 }
