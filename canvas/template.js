@@ -1,9 +1,39 @@
-import {loadProxyImage,dateRangeTR,C,rr} from "./utils.js";
+import {loadProxyImage,dateRangeTR,C} from "./utils.js";
 import {drawBackground} from "./background.js";
 import {drawLogo} from "./logo.js";
 import {drawProductImage} from "./image.js";
 import {drawProductInfo} from "./typography.js";
 import {drawPriceBlock} from "./price.js";
+
+function drawDatePill(ctx,text){
+  let size=20;
+  ctx.font="700 "+size+"px Arial";
+  let w=ctx.measureText(text).width;
+
+  while(w>860&&size>13){
+    size-=1;
+    ctx.font="700 "+size+"px Arial";
+    w=ctx.measureText(text).width;
+  }
+
+  const pillW=w+64;
+  const pillH=44;
+  const cx=540;
+  const cy=1032;
+
+  ctx.save();
+  ctx.strokeStyle="rgba(255,212,0,0.55)";
+  ctx.lineWidth=1.4;
+  ctx.beginPath();
+  ctx.ellipse(cx,cy,pillW/2,pillH/2,0,0,Math.PI*2);
+  ctx.stroke();
+  ctx.restore();
+
+  ctx.textAlign="center";
+  ctx.fillStyle=C.gold;
+  ctx.font="700 "+size+"px Arial";
+  ctx.fillText(text,cx,cy+size*0.32);
+}
 
 export async function renderPoster({deal,business}){
   const canvas=document.createElement("canvas");
@@ -32,48 +62,8 @@ export async function renderPoster({deal,business}){
   drawProductInfo(ctx,deal);
   drawPriceBlock(ctx,deal);
 
-  // Tarih - daha ince, kapsül kutu içinde
   const dateText=dateRangeTR(deal.start_date,deal.end_date)+" TARİHLERİ ARASINDA GEÇERLİDİR";
-
-  let fontSize=21;
-  ctx.font="600 "+fontSize+"px Arial";
-
-  while(ctx.measureText(dateText).width>830&&fontSize>16){
-    fontSize-=1;
-    ctx.font="600 "+fontSize+"px Arial";
-  }
-
-  const textW=ctx.measureText(dateText).width;
-  const pillW=Math.min(920,textW+90);
-  const pillH=46;
-  const pillX=(1080-pillW)/2;
-  const pillY=1012;
-
-  ctx.save();
-
-  // İnce üst çizgi
-  ctx.strokeStyle="rgba(255,212,0,0.34)";
-  ctx.lineWidth=1.5;
-  ctx.beginPath();
-  ctx.moveTo(120,995);
-  ctx.lineTo(960,995);
-  ctx.stroke();
-
-  // Kapsül kutu
-  rr(ctx,pillX,pillY,pillW,pillH,23);
-  ctx.fillStyle="rgba(0,0,0,0.46)";
-  ctx.fill();
-
-  ctx.strokeStyle="rgba(255,212,0,0.62)";
-  ctx.lineWidth=1.5;
-  ctx.stroke();
-
-  ctx.textAlign="center";
-  ctx.fillStyle=C.gold;
-  ctx.font="600 "+fontSize+"px Arial";
-  ctx.fillText(dateText,540,pillY+30);
-
-  ctx.restore();
+  drawDatePill(ctx,dateText);
 
   return canvas;
 }
