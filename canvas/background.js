@@ -1,50 +1,58 @@
 import {C,cover,drawNoise} from "./utils.js";
 
 export function drawBackground(ctx,productImg){
-  ctx.fillStyle=C.black;
+  ctx.fillStyle="#030303";
   ctx.fillRect(0,0,1080,1080);
 
+  // Ürün fotoğrafından bulanık arka plan
   if(productImg){
     ctx.save();
-    ctx.globalAlpha=0.48;
-    ctx.filter="blur(16px)";
-    cover(ctx,productImg,-80,130,1240,820,0.5,0.5);
+    ctx.globalAlpha=0.30;
+    ctx.filter="blur(18px) saturate(1.2) contrast(1.1)";
+    cover(ctx,productImg,-120,120,1320,820,0.55,0.5);
     ctx.restore();
     ctx.filter="none";
   }
 
-  const spot=ctx.createRadialGradient(815,455,40,815,455,620);
-  spot.addColorStop(0,"rgba(255,212,0,0.26)");
-  spot.addColorStop(0.42,"rgba(255,168,0,0.12)");
+  // Sağ tarafta sıcak sarı ışık
+  const spot=ctx.createRadialGradient(820,460,40,820,460,650);
+  spot.addColorStop(0,"rgba(255,212,0,0.24)");
+  spot.addColorStop(0.35,"rgba(255,150,0,0.12)");
   spot.addColorStop(1,"rgba(0,0,0,0)");
   ctx.fillStyle=spot;
   ctx.fillRect(0,0,1080,1080);
 
-  const top=ctx.createLinearGradient(0,0,0,250);
+  // Üst logo alanı
+  const top=ctx.createLinearGradient(0,0,0,230);
   top.addColorStop(0,"rgba(0,0,0,1)");
+  top.addColorStop(0.65,"rgba(0,0,0,0.85)");
   top.addColorStop(1,"rgba(0,0,0,0.25)");
   ctx.fillStyle=top;
-  ctx.fillRect(0,0,1080,270);
+  ctx.fillRect(0,0,1080,260);
 
-  const left=ctx.createLinearGradient(0,0,760,0);
-  left.addColorStop(0,"rgba(0,0,0,0.98)");
-  left.addColorStop(0.52,"rgba(0,0,0,0.80)");
-  left.addColorStop(1,"rgba(0,0,0,0.10)");
+  // Sol yazı alanı koyuluğu
+  const left=ctx.createLinearGradient(0,0,720,0);
+  left.addColorStop(0,"rgba(0,0,0,1)");
+  left.addColorStop(0.48,"rgba(0,0,0,0.88)");
+  left.addColorStop(1,"rgba(0,0,0,0)");
   ctx.fillStyle=left;
-  ctx.fillRect(0,150,1080,780);
+  ctx.fillRect(0,140,1080,760);
 
-  const bottom=ctx.createLinearGradient(0,575,0,1080);
+  // Alt fiyat alanı
+  const bottom=ctx.createLinearGradient(0,650,0,1080);
   bottom.addColorStop(0,"rgba(0,0,0,0)");
-  bottom.addColorStop(0.55,"rgba(0,0,0,0.86)");
+  bottom.addColorStop(0.45,"rgba(0,0,0,0.82)");
   bottom.addColorStop(1,"rgba(0,0,0,1)");
   ctx.fillStyle=bottom;
-  ctx.fillRect(0,560,1080,520);
+  ctx.fillRect(0,600,1080,480);
 
-  const vignette=ctx.createRadialGradient(540,520,280,540,520,780);
+  // Hafif vignette
+  const vignette=ctx.createRadialGradient(540,520,260,540,520,820);
   vignette.addColorStop(0,"rgba(0,0,0,0)");
-  vignette.addColorStop(1,"rgba(0,0,0,0.74)");
+  vignette.addColorStop(1,"rgba(0,0,0,0.78)");
   ctx.fillStyle=vignette;
   ctx.fillRect(0,0,1080,1080);
 
-  drawNoise(ctx,1080,1080,0.028);
+  // Çok hafif noise
+  drawNoise(ctx,1080,1080,0.025);
 }
