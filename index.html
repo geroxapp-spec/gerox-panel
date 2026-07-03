@@ -1093,37 +1093,30 @@ function pDrawFooter(ctx,deal){
 
 // ---- template.js (orkestra eden ana fonksiyon) ----
 async function dlPost(id){
-  const{data:d}=await client.from("deals").select("*").eq("id",id).single();
-  if(!d){alert("Kampanya bulunamadı.");return;}
+  if(!window.GeroxPoster){
+    alert("Poster sistemi yüklenemedi. Sayfayı yenileyip tekrar deneyin.");
+    return;
+  }
 
-  const canvas=document.createElement("canvas");
-  canvas.width=1080;canvas.height=1080;
-  const ctx=canvas.getContext("2d");
+  const{data:d,error}=await client
+    .from("deals")
+    .select("*")
+    .eq("id",id)
+    .single();
+
+  if(error||!d){
+    alert("Kampanya bulunamadı.");
+    return;
+  }
 
   try{
-    pDrawBackground(ctx);
-    await pDrawLogo(ctx,biz);
-
-    const imageBox={x:60,y:210,w:960,h:460};
-    await pDrawProductImage(ctx,d.image_url,imageBox);
-
-    const disc=d.old_price>0?Math.round(((d.old_price-d.new_price)/d.old_price)*100):0;
-    pDrawDiscountBadge(ctx,disc,imageBox.x+imageBox.w-30,imageBox.y+30,62);
-
-    pDrawTypography(ctx,d,60,736,560);
-    pDrawPriceCard(ctx,d,660,700,360,260);
-
-    pDrawFooter(ctx,d);
-    pDrawNoise(ctx);
-
-    const link=document.createElement("a");
-    link.download=d.title.replace(/[^a-zA-Z0-9ğüşöçıİĞÜŞÖÇ ]/g,"").replace(/\s+/g,"-")+".png";
-    link.href=canvas.toDataURL("image/png");
-    link.click();
-
+    await window.GeroxPoster.download({
+      deal:d,
+      business:biz
+    });
   }catch(err){
     console.error(err);
-    alert("Görsel oluşturulamadı. Hata: "+err.message);
+    alert("Görsel oluşturulamadı: "+err.message);
   }
 }
   
@@ -1131,5 +1124,6 @@ async function dlPost(id){
 window.onload=()=>boot();
 </script>
 
+<script type="module" src="./canvas/export.js"></script>
 </body>
 </html>
