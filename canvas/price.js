@@ -1,189 +1,177 @@
 import { C, money, splitMoney, rr } from "./utils.js";
 import { Layout } from "./layout.js";
 
-function drawGlass(ctx, x, y, w, h) {
+// =========================
+// PRICE TAG BACK SHAPE
+// =========================
+
+function drawPriceTag(ctx, x, y, w, h) {
 
     ctx.save();
 
-    rr(ctx, x, y, w, h, 36);
+    ctx.shadowColor = "rgba(255,212,0,0.30)";
+    ctx.shadowBlur = 22;
+    ctx.shadowOffsetY = 10;
 
-    const g = ctx.createLinearGradient(0, y, 0, y + h);
+    ctx.fillStyle = C.gold;
 
-    g.addColorStop(0, "rgba(255,255,255,.08)");
-    g.addColorStop(.5, "rgba(255,255,255,.03)");
-    g.addColorStop(1, "rgba(255,255,255,.02)");
-
-    ctx.fillStyle = g;
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255,212,0,.20)";
-    ctx.lineWidth = 2;
-
-    ctx.stroke();
-
-    ctx.restore();
-
-}
-
-function drawPriceCard(ctx, x, y, w, h) {
-
-    ctx.save();
-
-    ctx.shadowColor = "rgba(0,0,0,.45)";
-    ctx.shadowBlur = 35;
-    ctx.shadowOffsetY = 12;
-
-    rr(ctx, x, y, w, h, 40);
-
-    const g = ctx.createLinearGradient(
-        x,
-        y,
-        x,
-        y + h
-    );
-
-    g.addColorStop(0, "#FFD94B");
-    g.addColorStop(.5, "#FFD000");
-    g.addColorStop(1, "#F0B600");
-
-    ctx.fillStyle = g;
-
+    ctx.beginPath();
+    ctx.moveTo(x + 28, y);
+    ctx.lineTo(x + w - 52, y);
+    ctx.lineTo(x + w, y + h / 2);
+    ctx.lineTo(x + w - 52, y + h);
+    ctx.lineTo(x + 28, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - 28);
+    ctx.lineTo(x, y + 28);
+    ctx.quadraticCurveTo(x, y, x + 28, y);
+    ctx.closePath();
     ctx.fill();
 
     ctx.restore();
-
 }
 
-function drawOldPrice(ctx, x, y, value) {
+// =========================
+// OLD PRICE (STRIKETHROUGH)
+// =========================
 
-    if (!value) return;
+function drawOldPrice(ctx, x, y, oldPrice) {
 
-    const txt = money(value);
+    const txt = money(oldPrice);
 
     ctx.textAlign = "left";
-
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
     ctx.font = "600 30px Arial";
-
-    ctx.fillStyle = "rgba(255,255,255,.65)";
 
     ctx.fillText(txt, x, y);
 
     const w = ctx.measureText(txt).width;
 
-    ctx.strokeStyle = "#ff4040";
-
+    ctx.strokeStyle = C.gold;
     ctx.lineWidth = 3;
 
     ctx.beginPath();
-
     ctx.moveTo(x, y - 10);
-
     ctx.lineTo(x + w, y - 10);
-
     ctx.stroke();
-
 }
 
-function drawPrice(ctx, x, y, value) {
+// =========================
+// NEW PRICE (HERO PRICE)
+// =========================
 
-    const p = splitMoney(value);
+function drawNewPrice(ctx, x, y, price) {
+
+    const p = splitMoney(price);
+
+    let size = 110;
+
+    while (size > 60) {
+
+        ctx.font = `900 ${size}px Arial`;
+        const w1 = ctx.measureText(p.lira).width;
+
+        ctx.font = `900 ${Math.round(size * 0.5)}px Arial`;
+        const w2 = ctx.measureText("," + p.kurus).width;
+
+        ctx.font = `700 ${Math.round(size * 0.45)}px Arial`;
+        const w3 = ctx.measureText("₺").width;
+
+        if (w1 + w2 + w3 < 420) break;
+
+        size -= 4;
+    }
 
     ctx.textAlign = "left";
 
-    ctx.fillStyle = "#151515";
+    ctx.fillStyle = "#141414";
 
-    ctx.font = "900 110px Arial Black";
-
+    ctx.font = `900 ${size}px Arial`;
     ctx.fillText(p.lira, x, y);
 
-    const w = ctx.measureText(p.lira).width;
+    const w1 = ctx.measureText(p.lira).width;
 
-    ctx.font = "900 54px Arial Black";
-
-    ctx.fillText("," + p.kurus, x + w + 10, y - 6);
+    ctx.font = `900 ${Math.round(size * 0.5)}px Arial`;
+    ctx.fillText("," + p.kurus, x + w1 + 8, y - 6);
 
     const w2 = ctx.measureText("," + p.kurus).width;
 
-    ctx.font = "700 42px Arial";
-
-    ctx.fillText("₺", x + w + w2 + 22, y - 6);
-
+    ctx.font = `700 ${Math.round(size * 0.45)}px Arial`;
+    ctx.fillText("₺", x + w1 + w2 + 22, y - 6);
 }
 
-function drawDiscount(ctx, x, y, value) {
-
-    if (value <= 0) return;
-
-    ctx.save();
-
-    rr(ctx, x, y, 170, 96, 26);
-
-    ctx.fillStyle = "#D62828";
-
-    ctx.fill();
-
-    ctx.textAlign = "center";
-
-    ctx.fillStyle = "#FFF";
-
-    ctx.font = "900 44px Arial Black";
-
-    ctx.fillText("%" + value, x + 85, y + 48);
-
-    ctx.font = "700 20px Arial";
-
-    ctx.fillText("İNDİRİM", x + 85, y + 76);
-
-    ctx.restore();
-
-}
+// =========================
+// MAIN EXPORT
+// =========================
 
 export function drawPriceBlock(ctx, deal) {
 
-    const box = Layout.price;
-
-    drawGlass(
-        ctx,
-        box.x - 18,
-        box.y - 18,
-        box.w + 36,
-        box.h + 36
-    );
-
+    // OLD PRICE
     drawOldPrice(
         ctx,
-        box.x + 20,
-        box.y + 15,
+        Layout.oldPrice.x,
+        Layout.oldPrice.y,
         deal.old_price
     );
 
-    drawPriceCard(
+    // TAG BACKGROUND
+    drawPriceTag(
         ctx,
-        box.x,
-        box.y + 35,
-        box.w,
-        145
+        Layout.priceTag.x,
+        Layout.priceTag.y,
+        Layout.priceTag.w,
+        Layout.priceTag.h
     );
 
-    drawPrice(
+    // NEW PRICE
+    drawNewPrice(
         ctx,
-        box.x + 26,
-        box.y + 140,
+        Layout.newPrice.x,
+        Layout.newPrice.y,
         deal.new_price
     );
+
+    // =========================
+    // DISCOUNT BADGE
+    // =========================
 
     const old = Number(deal.old_price || 0);
     const nw = Number(deal.new_price || 0);
 
-    const disc = old > 0
-        ? Math.round(((old - nw) / old) * 100)
-        : 0;
+    const disc =
+        old > 0
+            ? Math.max(0, Math.round(((old - nw) / old) * 100))
+            : 0;
 
-    drawDiscount(
-        ctx,
-        box.x + box.w - 185,
-        box.y - 5,
-        disc
-    );
+    if (disc > 0) {
 
+        ctx.save();
+
+        rr(
+            ctx,
+            Layout.badge.x,
+            Layout.badge.y,
+            Layout.badge.w,
+            Layout.badge.h,
+            Layout.badge.radius
+        );
+
+        ctx.fillStyle = "rgba(0,0,0,0.65)";
+        ctx.fill();
+
+        ctx.strokeStyle = "rgba(255,212,0,0.45)";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.textAlign = "center";
+
+        ctx.fillStyle = C.gold;
+        ctx.font = "900 44px Arial Black, Arial";
+        ctx.fillText(`%${disc}`, 930, 900);
+
+        ctx.fillStyle = C.white;
+        ctx.font = "bold 20px Arial";
+        ctx.fillText("İNDİRİM", 930, 930);
+
+        ctx.restore();
+    }
 }
