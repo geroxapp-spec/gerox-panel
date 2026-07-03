@@ -1,5 +1,9 @@
-import { C, upperTR, wrapLines, rr } from "./utils.js";
+import { C, upperTR, fitFont, wrapLines, rr } from "./utils.js";
 import { Layout } from "./layout.js";
+
+// =========================
+// CATEGORY LABEL
+// =========================
 
 const CATEGORY_LABELS = {
     manav: "MANAV",
@@ -12,211 +16,148 @@ const CATEGORY_LABELS = {
 };
 
 function categoryLabel(cat) {
-
-    return CATEGORY_LABELS[String(cat || "").toLowerCase()]
-        || upperTR(cat || "FIRSAT");
-
+    return CATEGORY_LABELS[String(cat || "").toLowerCase()] ||
+        upperTR(cat || "FIRSAT");
 }
+
+// =========================
+// TITLE PARSER
+// =========================
 
 function parseTitle(title) {
 
     let t = String(title || "").trim();
-
     let unit = "";
 
     const m = t.match(/\(([^)]+)\)/);
 
     if (m) {
-
         unit = upperTR(m[1]);
-
         t = t.replace(m[0], "").trim();
-
     } else {
-
-        const m2 = t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|ADET|PKT))$/i);
+        const m2 = t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
 
         if (m2) {
-
             unit = upperTR(m2[1]);
-
             t = t.replace(m2[0], "").trim();
-
         }
-
     }
 
     return {
-
         name: upperTR(t),
-
         unit
-
     };
-
 }
+
+// =========================
+// MAIN TEXT BLOCK
+// =========================
 
 export function drawProductInfo(ctx, deal) {
 
-    const box = Layout.title;
+    const panel = Layout.infoPanel;
 
-    // ===========================
-    // GLASS PANEL
-    // ===========================
+    // =========================
+    // BACK PANEL
+    // =========================
 
     ctx.save();
 
-    rr(
-        ctx,
-        box.x - 20,
-        box.y - 25,
-        box.w + 40,
-        270,
-        30
-    );
+    rr(ctx, panel.x, panel.y, panel.w, panel.h, panel.radius);
 
-    const glass = ctx.createLinearGradient(
-        0,
-        box.y,
-        0,
-        box.y + 270
-    );
-
-    glass.addColorStop(0, "rgba(255,255,255,.05)");
-    glass.addColorStop(.5, "rgba(255,255,255,.02)");
-    glass.addColorStop(1, "rgba(255,255,255,.01)");
-
-    ctx.fillStyle = glass;
-
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
     ctx.fill();
 
-    ctx.strokeStyle = "rgba(255,212,0,.15)";
-    ctx.lineWidth = 2;
-
+    ctx.strokeStyle = "rgba(255,212,0,0.10)";
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
     ctx.restore();
 
-    // ===========================
+    // =========================
     // CATEGORY
-    // ===========================
+    // =========================
 
     ctx.textAlign = "left";
-
     ctx.fillStyle = C.gold;
-
-    ctx.font = "700 26px Arial";
+    ctx.font = "900 26px Arial Black, Arial";
 
     ctx.fillText(
         categoryLabel(deal.category),
-        box.x,
-        box.y
+        Layout.category.x,
+        Layout.category.y
     );
 
-    // GOLD LINE
-
-    ctx.strokeStyle = C.gold;
-
-    ctx.lineWidth = 3;
-
-    ctx.beginPath();
-
-    ctx.moveTo(box.x, box.y + 18);
-
-    ctx.lineTo(box.x + 120, box.y + 18);
-
-    ctx.stroke();
-
-    // ===========================
+    // =========================
     // TITLE
-    // ===========================
+    // =========================
 
     const parsed = parseTitle(deal.title);
 
-    let font = 86;
-
+    let size = 86;
     let lines = [];
 
-    while (font > 52) {
+    while (size >= 52) {
 
         lines = wrapLines(
             ctx,
             parsed.name,
-            box.w,
-            font,
-            "Arial Black",
+            panel.w - 60,
+            size,
+            "Impact, Arial Black, Arial",
             3
         );
 
-        if (lines.length <= 3)
-            break;
+        ctx.font = `900 ${size}px Impact, Arial Black, Arial`;
 
-        font -= 4;
+        const ok = lines.every(l => ctx.measureText(l).width <= panel.w - 60);
 
+        if (ok) break;
+
+        size -= 4;
     }
 
-    ctx.fillStyle = "#FFFFFF";
+    ctx.fillStyle = C.white;
+    ctx.shadowColor = "rgba(0,0,0,0.85)";
+    ctx.shadowBlur = 12;
 
-    ctx.strokeStyle = "rgba(0,0,0,.70)";
-    ctx.lineWidth = 8;
-
-    ctx.shadowColor = "rgba(0,0,0,.35)";
-    ctx.shadowBlur = 14;
-
-    ctx.font = `900 ${font}px Arial Black`;
-
-    let y = box.y + 78;
+    let y = Layout.title.y;
 
     for (const line of lines) {
-
-        ctx.strokeText(
-            line,
-            box.x,
-            y
-        );
-
-        ctx.fillText(
-            line,
-            box.x,
-            y
-        );
-
-        y += font + 6;
-
+        ctx.font = `900 ${size}px Impact, Arial Black, Arial`;
+        ctx.fillText(line, Layout.title.x, y);
+        y += size + 6;
     }
 
     ctx.shadowBlur = 0;
 
-    // ===========================
+    // =========================
     // UNIT
-    // ===========================
+    // =========================
 
     if (parsed.unit) {
 
         ctx.fillStyle = C.gold;
+        ctx.font = "900 64px Impact, Arial Black, Arial";
 
-        ctx.font = "700 34px Arial";
+        ctx.fillText(parsed.unit, Layout.unit.x, y + 20);
 
-        ctx.fillText(
-            "(" + parsed.unit + ")",
-            box.x,
-            y + 10
-        );
+        ctx.strokeStyle = C.gold;
+        ctx.lineWidth = 4;
 
+        ctx.beginPath();
+        ctx.moveTo(Layout.unit.x, y + 55);
+        ctx.lineTo(Layout.unit.x + 140, y + 55);
+        ctx.stroke();
+
+    } else {
+
+        ctx.strokeStyle = C.gold;
+        ctx.lineWidth = 4;
+
+        ctx.beginPath();
+        ctx.moveTo(Layout.unit.x, y + 20);
+        ctx.lineTo(Layout.unit.x + 140, y + 20);
+        ctx.stroke();
     }
-
-    // ===========================
-    // SLOGAN
-    // ===========================
-
-    ctx.fillStyle = "rgba(255,255,255,.55)";
-
-    ctx.font = "600 22px Arial";
-
-    ctx.fillText(
-        "Kaliteli • Ekonomik • Güvenilir",
-        box.x,
-        y + 52
-    );
-
 }
