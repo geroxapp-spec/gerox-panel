@@ -1,4 +1,4 @@
-import {C,upperTR,wrapLines} from "./utils.js";
+import {C,upperTR,fitFont,wrapLines,rr} from "./utils.js";
 
 const CATEGORY_LABELS={
   manav:"MANAV",
@@ -39,36 +39,45 @@ function parseTitle(title){
 }
 
 export function drawProductInfo(ctx,deal){
-  const parsed=parseTitle(deal.title);
+  const panel={
+    x:42,
+    y:205,
+    w:505,
+    h:300
+  };
+
+  ctx.save();
+  rr(ctx,panel.x,panel.y,panel.w,panel.h,34);
+  ctx.fillStyle="rgba(0,0,0,0.26)";
+  ctx.fill();
+
+  ctx.strokeStyle="rgba(255,212,0,0.12)";
+  ctx.lineWidth=1.5;
+  ctx.stroke();
+  ctx.restore();
 
   ctx.textAlign="left";
 
-  // Kategori
   ctx.fillStyle=C.gold;
-  ctx.font="800 30px Arial Black, Arial";
-  ctx.fillText(categoryLabel(deal.category),55,250);
+  ctx.font="900 28px Arial Black, Arial";
+  ctx.fillText(categoryLabel(deal.category),70,260);
 
-  // Ürün adı
-  const titleMaxWidth=430;
+  const parsed=parseTitle(deal.title);
+
   let titleSize=92;
   let lines=[];
 
-  while(titleSize>=56){
-    lines=wrapLines(ctx,parsed.name,titleMaxWidth,titleSize,"Impact, Arial Black, Arial",3);
-
-    ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
+  while(titleSize>=58){
+    lines=wrapLines(ctx,parsed.name,430,titleSize,"Impact, Arial Black, Arial",3);
 
     let ok=true;
+    ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
 
     for(let i=0;i<lines.length;i++){
-      if(ctx.measureText(lines[i]).width>titleMaxWidth){
-        ok=false;
-      }
+      if(ctx.measureText(lines[i]).width>430)ok=false;
     }
 
-    if(ok){
-      break;
-    }
+    if(ok)break;
 
     titleSize-=4;
   }
@@ -76,43 +85,35 @@ export function drawProductInfo(ctx,deal){
   ctx.fillStyle=C.white;
   ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
 
-  ctx.shadowColor="rgba(0,0,0,0.95)";
-  ctx.shadowBlur=14;
+  ctx.shadowColor="rgba(0,0,0,0.85)";
+  ctx.shadowBlur=10;
 
   let y=340;
 
   for(let i=0;i<lines.length;i++){
-    ctx.fillText(lines[i],55,y);
+    ctx.fillText(lines[i],70,y);
     y+=titleSize+8;
   }
 
   ctx.shadowBlur=0;
 
-  // Birim
-  const unitY=y+25;
-
   if(parsed.unit){
     ctx.fillStyle=C.gold;
-    ctx.font="900 78px Impact, Arial Black, Arial";
-    ctx.fillText(parsed.unit,55,unitY);
+    ctx.font="900 72px Impact, Arial Black, Arial";
+    ctx.fillText(parsed.unit,70,y+18);
 
-    // Birimin altındaki kısa çizgi
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(55,unitY+38);
-    ctx.lineTo(190,unitY+38);
+    ctx.moveTo(70,y+55);
+    ctx.lineTo(205,y+55);
     ctx.stroke();
   }else{
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(55,unitY+10);
-    ctx.lineTo(190,unitY+10);
+    ctx.moveTo(70,y+20);
+    ctx.lineTo(205,y+20);
     ctx.stroke();
   }
-
-  // Not:
-  // Buradaki slogan yazıları özellikle kaldırıldı.
-  // "TAZE / DOĞAL / LEZZETLİ" veya "KALİTELİ / LEZZETLİ / BEREKETLİ" artık görünmeyecek.
 }
