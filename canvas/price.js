@@ -146,7 +146,9 @@ export function drawPriceBlock(ctx,deal){
   drawOldPrice(ctx,64,812,deal.old_price);
 
   // Premium fiyat kartı
-  drawPriceCard(ctx,48,835,590,150);
+  const p=LAYOUT.priceCard;
+
+  drawPriceCard(ctx,p.x,p.y,p.w,p.h);
 
   // Küçük başlık
   ctx.textAlign="left";
