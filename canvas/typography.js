@@ -1,163 +1,91 @@
-import { C, upperTR, fitFont, wrapLines, rr } from "./utils.js";
-import { Layout } from "./layout.js";
+import {C,upperTR,fitFont,wrapLines} from "./utils.js";
 
-// =========================
-// CATEGORY LABEL
-// =========================
-
-const CATEGORY_LABELS = {
-    manav: "MANAV",
-    kasap: "KASAP",
-    sut: "SÜT ÜRÜNLERİ",
-    bakliyat: "BAKLİYAT",
-    cay: "ÇAY & KAHVE",
-    temizlik: "TEMİZLİK",
-    kisisel: "KİŞİSEL BAKIM"
+const CATEGORY_LABELS={
+  manav:"MANAV",
+  kasap:"KASAP",
+  sut:"SÜT ÜRÜNLERİ",
+  bakliyat:"BAKLİYAT",
+  cay:"ÇAY & KAHVE",
+  temizlik:"TEMİZLİK",
+  kisisel:"KİŞİSEL BAKIM"
 };
 
-function categoryLabel(cat) {
-    return CATEGORY_LABELS[String(cat || "").toLowerCase()] ||
-        upperTR(cat || "FIRSAT");
+function categoryLabel(cat){
+  return CATEGORY_LABELS[String(cat||"").toLowerCase()]||upperTR(cat||"FIRSAT");
 }
 
-// =========================
-// TITLE PARSER
-// =========================
+function parseTitle(title){
+  let t=String(title||"").trim();
+  let unit="";
 
-function parseTitle(title) {
+  const m=t.match(/\(([^)]+)\)/);
 
-    let t = String(title || "").trim();
-    let unit = "";
+  if(m){
+    unit=upperTR(m[1]);
+    t=t.replace(m[0],"").trim();
+  }else{
+    const m2=t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
 
-    const m = t.match(/\(([^)]+)\)/);
-
-    if (m) {
-        unit = upperTR(m[1]);
-        t = t.replace(m[0], "").trim();
-    } else {
-        const m2 = t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
-
-        if (m2) {
-            unit = upperTR(m2[1]);
-            t = t.replace(m2[0], "").trim();
-        }
+    if(m2){
+      unit=upperTR(m2[1]);
+      t=t.replace(m2[0],"").trim();
     }
+  }
 
-    return {
-        name: upperTR(t),
-        unit
-    };
+  return{name:upperTR(t),unit:unit};
 }
 
-// =========================
-// MAIN TEXT BLOCK
-// =========================
+export function drawProductInfo(ctx,deal){
+  const x=60;
+  const catY=730;
 
-export function drawProductInfo(ctx, deal) {
+  ctx.font="800 22px Arial";
+  const label=categoryLabel(deal.category);
+  const padX=18;
+  const w=ctx.measureText(label).width+padX*2;
 
-    const panel = Layout.infoPanel;
+  ctx.save();
+  ctx.fillStyle=C.gold;
+  ctx.beginPath();
+  ctx.roundRect(x,catY-30,w,40,20);
+  ctx.fill();
+  ctx.restore();
 
-    // =========================
-    // BACK PANEL
-    // =========================
+  ctx.textAlign="left";
+  ctx.fillStyle="#111111";
+  ctx.fillText(label,x+padX,catY-3);
 
-    ctx.save();
+  const parsed=parseTitle(deal.title);
+  const maxW=560;
 
-    rr(ctx, panel.x, panel.y, panel.w, panel.h, panel.radius);
+  let titleSize=68;
+  let lines=[];
 
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.fill();
+  while(titleSize>=40){
+    lines=wrapLines(ctx,parsed.name,maxW,titleSize,"Arial Black, Arial",2);
+    ctx.font="900 "+titleSize+"px Arial Black, Arial";
 
-    ctx.strokeStyle = "rgba(255,212,0,0.10)";
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
+    let ok=true;
+    lines.forEach(l=>{if(ctx.measureText(l).width>maxW)ok=false;});
 
-    ctx.restore();
+    if(ok)break;
 
-    // =========================
-    // CATEGORY
-    // =========================
+    titleSize-=4;
+  }
 
-    ctx.textAlign = "left";
-    ctx.fillStyle = C.gold;
-    ctx.font = "900 26px Arial Black, Arial";
+  ctx.fillStyle=C.white;
+  ctx.font="900 "+titleSize+"px Arial Black, Arial";
 
-    ctx.fillText(
-        categoryLabel(deal.category),
-        Layout.category.x,
-        Layout.category.y
-    );
+  let ty=catY+titleSize+16;
 
-    // =========================
-    // TITLE
-    // =========================
+  lines.forEach(line=>{
+    ctx.fillText(line,x,ty);
+    ty+=titleSize+6;
+  });
 
-    const parsed = parseTitle(deal.title);
-
-    let size = 86;
-    let lines = [];
-
-    while (size >= 52) {
-
-        lines = wrapLines(
-            ctx,
-            parsed.name,
-            panel.w - 60,
-            size,
-            "Impact, Arial Black, Arial",
-            3
-        );
-
-        ctx.font = `900 ${size}px Impact, Arial Black, Arial`;
-
-        const ok = lines.every(l => ctx.measureText(l).width <= panel.w - 60);
-
-        if (ok) break;
-
-        size -= 4;
-    }
-
-    ctx.fillStyle = C.white;
-    ctx.shadowColor = "rgba(0,0,0,0.85)";
-    ctx.shadowBlur = 12;
-
-    let y = Layout.title.y;
-
-    for (const line of lines) {
-        ctx.font = `900 ${size}px Impact, Arial Black, Arial`;
-        ctx.fillText(line, Layout.title.x, y);
-        y += size + 6;
-    }
-
-    ctx.shadowBlur = 0;
-
-    // =========================
-    // UNIT
-    // =========================
-
-    if (parsed.unit) {
-
-        ctx.fillStyle = C.gold;
-        ctx.font = "900 64px Impact, Arial Black, Arial";
-
-        ctx.fillText(parsed.unit, Layout.unit.x, y + 20);
-
-        ctx.strokeStyle = C.gold;
-        ctx.lineWidth = 4;
-
-        ctx.beginPath();
-        ctx.moveTo(Layout.unit.x, y + 55);
-        ctx.lineTo(Layout.unit.x + 140, y + 55);
-        ctx.stroke();
-
-    } else {
-
-        ctx.strokeStyle = C.gold;
-        ctx.lineWidth = 4;
-
-        ctx.beginPath();
-        ctx.moveTo(Layout.unit.x, y + 20);
-        ctx.lineTo(Layout.unit.x + 140, y + 20);
-        ctx.stroke();
-    }
+  if(parsed.unit){
+    ctx.fillStyle=C.gold;
+    ctx.font="700 30px Arial";
+    ctx.fillText(parsed.unit,x,ty+8);
+  }
 }
