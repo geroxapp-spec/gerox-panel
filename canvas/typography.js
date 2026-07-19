@@ -72,7 +72,9 @@ export function drawProductInfo(ctx,deal){
   // Kategori
   ctx.fillStyle=C.gold;
   ctx.font="800 30px Arial Black, Arial";
-  ctx.fillText(categoryLabel(deal.category),55,250);
+  ctx.fillText(category,
+  LAYOUT.title.x,
+  LAYOUT.title.y);
 
   // Ürün adı
   const titleMaxWidth=430;
