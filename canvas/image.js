@@ -4,10 +4,9 @@ export function drawProductImage(ctx,productImg){
   if(!productImg)return;
 
   // Ürün artık kutu gibi değil, afiş yüzeyine yayılıyor
-  const x=230;
-  const y=155;
-  const w=890;
-  const h=720;
+  import {LAYOUT} from "./layout.js";
+
+  const {x,y,w,h}=LAYOUT.product;
 
   // Ürün arkasına sıcak glow
   const glow=ctx.createRadialGradient(780,510,80,780,510,560);
