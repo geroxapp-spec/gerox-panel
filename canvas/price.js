@@ -173,4 +173,5 @@ export function drawPriceBlock(ctx,deal){
     LAYOUT.newPrice.y,
     deal.new_price,
     500
-);
+  );
+}
