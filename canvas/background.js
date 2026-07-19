@@ -36,7 +36,12 @@ export function drawBackground(ctx,productImg){
   left.addColorStop(0.52,"rgba(0,0,0,0.90)");
   left.addColorStop(1,"rgba(0,0,0,0)");
   ctx.fillStyle=left;
-  ctx.fillRect(0,140,1080,780);
+  ctx.fillRect(
+    0,
+    140,
+    900,
+    780
+);
 
   // Alt fiyat zemini
   const bottom=ctx.createLinearGradient(0,620,0,1080);
