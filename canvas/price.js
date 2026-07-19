@@ -1,177 +1,68 @@
-import { C, money, splitMoney, rr } from "./utils.js";
-import { Layout } from "./layout.js";
+import {C,money,splitMoney} from "./utils.js";
 
-// =========================
-// PRICE TAG BACK SHAPE
-// =========================
+function drawOldPrice(ctx,x,y,oldPrice){
+  const txt=money(oldPrice);
 
-function drawPriceTag(ctx, x, y, w, h) {
+  ctx.textAlign="left";
+  ctx.font="600 26px Arial";
+  ctx.fillStyle="rgba(255,255,255,0.55)";
+  ctx.fillText(txt,x,y);
 
-    ctx.save();
+  const w=ctx.measureText(txt).width;
 
-    ctx.shadowColor = "rgba(255,212,0,0.30)";
-    ctx.shadowBlur = 22;
-    ctx.shadowOffsetY = 10;
-
-    ctx.fillStyle = C.gold;
-
-    ctx.beginPath();
-    ctx.moveTo(x + 28, y);
-    ctx.lineTo(x + w - 52, y);
-    ctx.lineTo(x + w, y + h / 2);
-    ctx.lineTo(x + w - 52, y + h);
-    ctx.lineTo(x + 28, y + h);
-    ctx.quadraticCurveTo(x, y + h, x, y + h - 28);
-    ctx.lineTo(x, y + 28);
-    ctx.quadraticCurveTo(x, y, x + 28, y);
-    ctx.closePath();
-    ctx.fill();
-
-    ctx.restore();
+  ctx.strokeStyle="rgba(255,255,255,0.55)";
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(x,y-9);
+  ctx.lineTo(x+w,y-9);
+  ctx.stroke();
 }
 
-// =========================
-// OLD PRICE (STRIKETHROUGH)
-// =========================
+function drawNewPrice(ctx,x,y,price,maxWidth){
+  const p=splitMoney(price);
 
-function drawOldPrice(ctx, x, y, oldPrice) {
+  let size=96;
 
-    const txt = money(oldPrice);
+  while(size>56){
+    ctx.font="900 "+size+"px Arial Black, Arial";
+    const w1=ctx.measureText(p.lira).width;
 
-    ctx.textAlign = "left";
-    ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.font = "600 30px Arial";
+    ctx.font="800 "+Math.round(size*0.46)+"px Arial";
+    const w2=ctx.measureText(","+p.kurus).width;
 
-    ctx.fillText(txt, x, y);
+    ctx.font="700 "+Math.round(size*0.4)+"px Arial";
+    const w3=ctx.measureText("₺").width;
 
-    const w = ctx.measureText(txt).width;
+    if(w1+w2+w3+40<=maxWidth)break;
 
-    ctx.strokeStyle = C.gold;
-    ctx.lineWidth = 3;
+    size-=4;
+  }
 
-    ctx.beginPath();
-    ctx.moveTo(x, y - 10);
-    ctx.lineTo(x + w, y - 10);
-    ctx.stroke();
+  ctx.textAlign="left";
+  ctx.fillStyle=C.gold;
+
+  ctx.font="900 "+size+"px Arial Black, Arial";
+  ctx.fillText(p.lira,x,y);
+
+  const w1=ctx.measureText(p.lira).width;
+
+  ctx.font="800 "+Math.round(size*0.46)+"px Arial";
+  ctx.fillText(","+p.kurus,x+w1+8,y-4);
+
+  const w2=ctx.measureText(","+p.kurus).width;
+
+  ctx.font="700 "+Math.round(size*0.4)+"px Arial";
+  ctx.fillText("₺",x+w1+w2+22,y-4);
 }
 
-// =========================
-// NEW PRICE (HERO PRICE)
-// =========================
+export function drawPriceBlock(ctx,deal){
+  const x=660;
 
-function drawNewPrice(ctx, x, y, price) {
+  ctx.textAlign="left";
+  ctx.fillStyle=C.gold;
+  ctx.font="800 20px Arial";
+  ctx.fillText("KAMPANYALI FİYAT",x,700);
 
-    const p = splitMoney(price);
-
-    let size = 110;
-
-    while (size > 60) {
-
-        ctx.font = `900 ${size}px Arial`;
-        const w1 = ctx.measureText(p.lira).width;
-
-        ctx.font = `900 ${Math.round(size * 0.5)}px Arial`;
-        const w2 = ctx.measureText("," + p.kurus).width;
-
-        ctx.font = `700 ${Math.round(size * 0.45)}px Arial`;
-        const w3 = ctx.measureText("₺").width;
-
-        if (w1 + w2 + w3 < 420) break;
-
-        size -= 4;
-    }
-
-    ctx.textAlign = "left";
-
-    ctx.fillStyle = "#141414";
-
-    ctx.font = `900 ${size}px Arial`;
-    ctx.fillText(p.lira, x, y);
-
-    const w1 = ctx.measureText(p.lira).width;
-
-    ctx.font = `900 ${Math.round(size * 0.5)}px Arial`;
-    ctx.fillText("," + p.kurus, x + w1 + 8, y - 6);
-
-    const w2 = ctx.measureText("," + p.kurus).width;
-
-    ctx.font = `700 ${Math.round(size * 0.45)}px Arial`;
-    ctx.fillText("₺", x + w1 + w2 + 22, y - 6);
-}
-
-// =========================
-// MAIN EXPORT
-// =========================
-
-export function drawPriceBlock(ctx, deal) {
-
-    // OLD PRICE
-    drawOldPrice(
-        ctx,
-        Layout.oldPrice.x,
-        Layout.oldPrice.y,
-        deal.old_price
-    );
-
-    // TAG BACKGROUND
-    drawPriceTag(
-        ctx,
-        Layout.priceTag.x,
-        Layout.priceTag.y,
-        Layout.priceTag.w,
-        Layout.priceTag.h
-    );
-
-    // NEW PRICE
-    drawNewPrice(
-        ctx,
-        Layout.newPrice.x,
-        Layout.newPrice.y,
-        deal.new_price
-    );
-
-    // =========================
-    // DISCOUNT BADGE
-    // =========================
-
-    const old = Number(deal.old_price || 0);
-    const nw = Number(deal.new_price || 0);
-
-    const disc =
-        old > 0
-            ? Math.max(0, Math.round(((old - nw) / old) * 100))
-            : 0;
-
-    if (disc > 0) {
-
-        ctx.save();
-
-        rr(
-            ctx,
-            Layout.badge.x,
-            Layout.badge.y,
-            Layout.badge.w,
-            Layout.badge.h,
-            Layout.badge.radius
-        );
-
-        ctx.fillStyle = "rgba(0,0,0,0.65)";
-        ctx.fill();
-
-        ctx.strokeStyle = "rgba(255,212,0,0.45)";
-        ctx.lineWidth = 2;
-        ctx.stroke();
-
-        ctx.textAlign = "center";
-
-        ctx.fillStyle = C.gold;
-        ctx.font = "900 44px Arial Black, Arial";
-        ctx.fillText(`%${disc}`, 930, 900);
-
-        ctx.fillStyle = C.white;
-        ctx.font = "bold 20px Arial";
-        ctx.fillText("İNDİRİM", 930, 930);
-
-        ctx.restore();
-    }
+  drawOldPrice(ctx,x,745,deal.old_price);
+  drawNewPrice(ctx,x,860,deal.new_price,360);
 }
