@@ -39,7 +39,7 @@ try {
   + ".png";
 
   productImg = await loadProxyImage(
-    "/products/" + fileName,
+    "./canvas/products/" + fileName
     {
       w:1600,
       h:1200,
