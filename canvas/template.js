@@ -1,5 +1,12 @@
 import {LAYOUT} from "./layout.js";
-import {loadProxyImage,dateRangeTR,C,rr} from "./utils.js";
+import {
+  loadImage,
+  loadProxyImage,
+  dateRangeTR,
+  C,
+  rr
+} from "./utils.js";
+
 import {drawBackground} from "./background.js";
 import {drawLogo} from "./logo.js";
 import {drawProductImage} from "./image.js";
@@ -7,6 +14,7 @@ import {drawProductInfo} from "./typography.js";
 import {drawPriceBlock} from "./price.js";
 
 export async function renderPoster({deal,business}){
+
   const canvas=document.createElement("canvas");
   canvas.width=1080;
   canvas.height=1080;
@@ -15,16 +23,38 @@ export async function renderPoster({deal,business}){
 
   let productImg=null;
 
+  // Önce PNG dene
   try{
-    productImg=await loadProxyImage(deal.image_url,{
-      w:1600,
-      h:1200,
-      fit:"cover",
-      output:"jpg",
-      q:96
-    });
+
+    const fileName=(deal.slug||deal.id||deal.title||"")
+      .toString()
+      .toLocaleLowerCase("tr-TR")
+      .replace(/\((.*?)\)/g,"")
+      .replace(/[^a-z0-9çğıöşü\s-]/gi,"")
+      .trim()
+      .replace(/\s+/g,"-");
+
+    productImg=await loadImage(`/products/${fileName}.png`);
+
   }catch(e){
-    productImg=null;
+
+    // PNG yoksa normal resmi kullan
+    try{
+
+      productImg=await loadProxyImage(deal.image_url,{
+        w:1600,
+        h:1200,
+        fit:"cover",
+        output:"jpg",
+        q:96
+      });
+
+    }catch(e){
+
+      productImg=null;
+
+    }
+
   }
 
   drawBackground(ctx,productImg);
@@ -33,14 +63,15 @@ export async function renderPoster({deal,business}){
   drawProductInfo(ctx,deal);
   drawPriceBlock(ctx,deal);
 
-  // Tarih daha ince ve şık kapsül
-  const dateText=dateRangeTR(deal.start_date,deal.end_date)+" TARİHLERİ ARASINDA GEÇERLİDİR";
+  const dateText=
+    dateRangeTR(deal.start_date,deal.end_date)+
+    " TARİHLERİ ARASINDA GEÇERLİDİR";
 
   let fontSize=20;
   ctx.font="500 "+fontSize+"px Arial";
 
   while(ctx.measureText(dateText).width>820&&fontSize>16){
-    fontSize-=1;
+    fontSize--;
     ctx.font="500 "+fontSize+"px Arial";
   }
 
@@ -49,17 +80,18 @@ export async function renderPoster({deal,business}){
   const pillH=42;
   const pillX=(1080-pillW)/2;
   const pillY=LAYOUT.date.y;
+
   ctx.save();
 
-  // Üst ince çizgi
   ctx.strokeStyle="rgba(255,212,0,0.30)";
   ctx.lineWidth=1.2;
   ctx.beginPath();
-  ctx.moveTo(120,LAYOUT.date.y-17);
-  ctx.lineTo(960,LAYOUT.date.y-17);
+  ctx.moveTo(120,pillY-17);
+  ctx.lineTo(960,pillY-17);
   ctx.stroke();
 
   rr(ctx,pillX,pillY,pillW,pillH,21);
+
   ctx.fillStyle="rgba(0,0,0,0.58)";
   ctx.fill();
 
@@ -75,4 +107,5 @@ export async function renderPoster({deal,business}){
   ctx.restore();
 
   return canvas;
+
 }
