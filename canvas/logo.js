@@ -1,93 +1,41 @@
-import { C, loadProxyImage, contain } from "./utils.js";
-import { Layout } from "./layout.js";
+import {C,loadProxyImage,contain,fitFont} from "./utils.js";
 
-export async function drawLogo(ctx, business) {
+export async function drawLogo(ctx,business){
+  const box={x:290,y:34,w:500,h:88};
 
-    const box = Layout.logo;
+  ctx.save();
+  ctx.fillStyle="rgba(0,0,0,0.45)";
+  ctx.beginPath();
+  ctx.roundRect(box.x-30,box.y-14,box.w+60,box.h+28,60);
+  ctx.fill();
+  ctx.restore();
 
-    let drawn = false;
+  let drawn=false;
 
-    // =========================
-    // LOGO IMAGE (IF EXISTS)
-    // =========================
+  if(business&&business.logo_url){
+    try{
+      const logo=await loadProxyImage(business.logo_url,{
+        w:900,h:260,fit:"inside",output:"png",q:95
+      });
 
-    if (business && business.logo_url) {
-        try {
+      ctx.save();
+      ctx.shadowColor="rgba(255,212,0,0.35)";
+      ctx.shadowBlur=16;
+      contain(ctx,logo,box.x,box.y,box.w,box.h);
+      ctx.restore();
 
-            const logo = await loadProxyImage(business.logo_url, {
-                w: 1000,
-                h: 300,
-                fit: "inside",
-                output: "png",
-                q: 95
-            });
-
-            ctx.save();
-
-            // soft glow
-            ctx.shadowColor = "rgba(255,212,0,0.35)";
-            ctx.shadowBlur = 22;
-
-            contain(
-                ctx,
-                logo,
-                box.x,
-                box.y,
-                box.w,
-                box.h
-            );
-
-            ctx.restore();
-
-            drawn = true;
-
-        } catch (e) {
-            drawn = false;
-        }
+      drawn=true;
+    }catch(e){
+      drawn=false;
     }
+  }
 
-    // =========================
-    // FALLBACK TEXT LOGO
-    // =========================
-
-    if (!drawn) {
-
-        const name =
-            (business && business.name)
-                ? business.name
-                : "MARKET";
-
-        ctx.textAlign = "center";
-        ctx.fillStyle = C.gold;
-
-        let size = 64;
-
-        // auto fit
-        while (size > 28) {
-
-            ctx.font = `900 ${size}px Arial Black, Arial`;
-
-            const w = ctx.measureText(name).width;
-
-            if (w <= box.w) break;
-
-            size -= 2;
-        }
-
-        ctx.font = `900 ${size}px Arial Black, Arial`;
-
-        ctx.fillText(name.toLocaleUpperCase("tr-TR"), 540, 95);
-    }
-
-    // =========================
-    // GOLD LINE UNDER LOGO
-    // =========================
-
-    ctx.strokeStyle = "rgba(255,212,0,0.55)";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.moveTo(310, 168);
-    ctx.lineTo(770, 168);
-    ctx.stroke();
+  if(!drawn){
+    const name=((business&&business.name)?business.name:"MARKET").toLocaleUpperCase("tr-TR");
+    ctx.textAlign="center";
+    ctx.fillStyle=C.gold;
+    const size=fitFont(ctx,name,box.w,52,32,"Arial Black, Arial");
+    ctx.font="900 "+size+"px Arial Black, Arial";
+    ctx.fillText(name,540,box.y+box.h/2+size*0.32);
+  }
 }
