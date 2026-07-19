@@ -1,4 +1,5 @@
 import {C,money,splitMoney,rr} from "./utils.js";
+import {LAYOUT} from "./layout.js";
 
 function drawOldPrice(ctx,x,y,oldPrice){
   const txt=money(oldPrice);
@@ -102,9 +103,7 @@ function drawNewPrice(ctx,x,y,price,maxWidth){
 function drawDiscountBadge(ctx,disc){
   if(disc<=0)return;
 
-  const cx=930;
-  const cy=235;
-  const r=68;
+  const {x:cx,y:cy,r}=LAYOUT.discount;
 
   ctx.save();
 
@@ -143,12 +142,23 @@ export function drawPriceBlock(ctx,deal){
   drawDiscountBadge(ctx,disc);
 
   // Eski fiyat
-  drawOldPrice(ctx,64,812,deal.old_price);
+  drawOldPrice(
+    ctx,
+    LAYOUT.oldPrice.x,
+    LAYOUT.oldPrice.y,
+    deal.old_price
+);
 
   // Premium fiyat kartı
   const p=LAYOUT.priceCard;
 
-  drawPriceCard(ctx,p.x,p.y,p.w,p.h);
+  drawPriceCard(
+    ctx,
+    p.x,
+    p.y,
+    p.w,
+    p.h
+);
 
   // Küçük başlık
   ctx.textAlign="left";
@@ -157,5 +167,10 @@ export function drawPriceBlock(ctx,deal){
   ctx.fillText("ÖZEL FİYAT",82,875);
 
   // Yeni fiyat
-  drawNewPrice(ctx,82,950,deal.new_price,500);
-}
+  drawNewPrice(
+    ctx,
+    LAYOUT.newPrice.x,
+    LAYOUT.newPrice.y,
+    deal.new_price,
+    500
+);
