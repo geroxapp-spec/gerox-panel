@@ -21,39 +21,52 @@ export async function renderPoster({deal,business}){
 
   const ctx=canvas.getContext("2d");
 
-  let productImg=null;
+  let productImg = null;
 
-  // Önce PNG dene
+try {
+
+  const fileName = deal.title
+    .toLocaleLowerCase("tr-TR")
+    .replace(/\(kg\)/gi, "_kg")
+    .replace(/[()]/g, "")
+    .replace(/\s+/g, "_")
+    .replace(/ç/g,"c")
+    .replace(/ğ/g,"g")
+    .replace(/ı/g,"i")
+    .replace(/ö/g,"o")
+    .replace(/ş/g,"s")
+    .replace(/ü/g,"u")
+    + ".png";
+
+  productImg = await loadProxyImage(
+    "/products/" + fileName,
+    {
+      w:1600,
+      h:1200,
+      fit:"contain",
+      output:"png"
+    }
+  );
+
+}catch(e){
+
   try{
 
-    const fileName=(deal.slug||deal.id||deal.title||"")
-      .toString()
-      .toLocaleLowerCase("tr-TR")
-      .replace(/\((.*?)\)/g,"")
-      .replace(/[^a-z0-9çğıöşü\s-]/gi,"")
-      .trim()
-      .replace(/\s+/g,"-");
+    productImg=await loadProxyImage(deal.image_url,{
+      w:1600,
+      h:1200,
+      fit:"cover",
+      output:"jpg",
+      q:96
+    });
 
-    productImg=await loadImage(`/products/${fileName}.png`);
+  }catch(err){
 
-  }catch(e){
+    productImg=null;
 
-    // PNG yoksa normal resmi kullan
-    try{
+  }
 
-      productImg=await loadProxyImage(deal.image_url,{
-        w:1600,
-        h:1200,
-        fit:"cover",
-        output:"jpg",
-        q:96
-      });
-
-    }catch(e){
-
-      productImg=null;
-
-    }
+}
 
   }
 
