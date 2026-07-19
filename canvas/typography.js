@@ -1,4 +1,4 @@
-import {C,upperTR,fitFont,wrapLines} from "./utils.js";
+import {C,upperTR,wrapLines,rr} from "./utils.js";
 
 const CATEGORY_LABELS={
   manav:"MANAV",
@@ -32,41 +32,65 @@ function parseTitle(title){
     }
   }
 
-  return{name:upperTR(t),unit:unit};
+  return {
+    name:upperTR(t),
+    unit:unit
+  };
+}
+
+function drawHotBadge(ctx,x,y){
+  ctx.save();
+
+  const grad=ctx.createLinearGradient(x,y,x+250,y+54);
+  grad.addColorStop(0,"#FF3B00");
+  grad.addColorStop(1,"#FF8A00");
+
+  rr(ctx,x,y,245,54,27);
+  ctx.fillStyle=grad;
+  ctx.fill();
+
+  ctx.strokeStyle="rgba(255,212,0,0.72)";
+  ctx.lineWidth=2;
+  ctx.stroke();
+
+  ctx.shadowColor="rgba(255,90,0,0.45)";
+  ctx.shadowBlur=14;
+
+  ctx.textAlign="center";
+  ctx.fillStyle="#FFFFFF";
+  ctx.font="800 25px Arial Black, Arial";
+  ctx.fillText("SICAK FIRSAT",x+122,y+36);
+
+  ctx.restore();
 }
 
 export function drawProductInfo(ctx,deal){
-  const x=60;
-  const catY=730;
-
-  ctx.font="800 22px Arial";
-  const label=categoryLabel(deal.category);
-  const padX=18;
-  const w=ctx.measureText(label).width+padX*2;
-
-  ctx.save();
-  ctx.fillStyle=C.gold;
-  ctx.beginPath();
-  ctx.roundRect(x,catY-30,w,40,20);
-  ctx.fill();
-  ctx.restore();
+  const parsed=parseTitle(deal.title);
 
   ctx.textAlign="left";
-  ctx.fillStyle="#111111";
-  ctx.fillText(label,x+padX,catY-3);
 
-  const parsed=parseTitle(deal.title);
-  const maxW=560;
+  // Kategori
+  ctx.fillStyle=C.gold;
+  ctx.font="800 30px Arial Black, Arial";
+  ctx.fillText(categoryLabel(deal.category),55,250);
 
-  let titleSize=68;
+  // Ürün adı
+  const titleMaxWidth=430;
+  let titleSize=94;
   let lines=[];
 
-  while(titleSize>=40){
-    lines=wrapLines(ctx,parsed.name,maxW,titleSize,"Arial Black, Arial",2);
-    ctx.font="900 "+titleSize+"px Arial Black, Arial";
+  while(titleSize>=56){
+    lines=wrapLines(ctx,parsed.name,titleMaxWidth,titleSize,"Impact, Arial Black, Arial",3);
+
+    ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
 
     let ok=true;
-    lines.forEach(l=>{if(ctx.measureText(l).width>maxW)ok=false;});
+
+    for(let i=0;i<lines.length;i++){
+      if(ctx.measureText(lines[i]).width>titleMaxWidth){
+        ok=false;
+      }
+    }
 
     if(ok)break;
 
@@ -74,18 +98,47 @@ export function drawProductInfo(ctx,deal){
   }
 
   ctx.fillStyle=C.white;
-  ctx.font="900 "+titleSize+"px Arial Black, Arial";
+  ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
 
-  let ty=catY+titleSize+16;
+  ctx.shadowColor="rgba(0,0,0,0.95)";
+  ctx.shadowBlur=14;
 
-  lines.forEach(line=>{
-    ctx.fillText(line,x,ty);
-    ty+=titleSize+6;
-  });
+  let y=340;
+
+  for(let i=0;i<lines.length;i++){
+    ctx.strokeStyle="rgba(0,0,0,0.78)";
+    ctx.lineWidth=5;
+    ctx.strokeText(lines[i],55,y);
+
+    ctx.fillText(lines[i],55,y);
+    y+=titleSize+8;
+  }
+
+  ctx.shadowBlur=0;
+
+  // Birim
+  const unitY=y+25;
 
   if(parsed.unit){
     ctx.fillStyle=C.gold;
-    ctx.font="700 30px Arial";
-    ctx.fillText(parsed.unit,x,ty+8);
+    ctx.font="900 78px Impact, Arial Black, Arial";
+    ctx.fillText(parsed.unit,55,unitY);
+
+    ctx.strokeStyle=C.gold;
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(55,unitY+38);
+    ctx.lineTo(190,unitY+38);
+    ctx.stroke();
+  }else{
+    ctx.strokeStyle=C.gold;
+    ctx.lineWidth=5;
+    ctx.beginPath();
+    ctx.moveTo(55,unitY+10);
+    ctx.lineTo(190,unitY+10);
+    ctx.stroke();
   }
+
+  // Slogan yerine daha güçlü rozet
+  drawHotBadge(ctx,55,620);
 }
