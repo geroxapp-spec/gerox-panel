@@ -1,10 +1,5 @@
 import { LAYOUT } from "./layout.js";
-import {
-  loadProxyImage,
-  dateRangeTR,
-  C,
-  rr
-} from "./utils.js";
+import { loadImage, loadProxyImage, dateRangeTR, C, rr } from "./utils.js";
 
 import { drawBackground } from "./background.js";
 import { drawLogo } from "./logo.js";
@@ -13,7 +8,6 @@ import { drawProductInfo } from "./typography.js";
 import { drawPriceBlock } from "./price.js";
 
 export async function renderPoster({ deal, business }) {
-
   const canvas = document.createElement("canvas");
   canvas.width = 1080;
   canvas.height = 1080;
@@ -22,49 +16,41 @@ export async function renderPoster({ deal, business }) {
 
   let productImg = null;
 
-  try {
+  const safeTitle = String(deal?.title || "").trim();
 
-    const fileName = deal.title
+  const fileName =
+    safeTitle
       .toLocaleLowerCase("tr-TR")
       .replace(/\(kg\)/gi, "")
       .replace(/[()]/g, "")
       .replace(/\s+/g, "_")
-      .replace(/ç/g,"c")
-      .replace(/ğ/g,"g")
-      .replace(/ı/g,"i")
-      .replace(/ö/g,"o")
-      .replace(/ş/g,"s")
-      .replace(/ü/g,"u")
-      + ".png";
+      .replace(/ç/g, "c")
+      .replace(/ğ/g, "g")
+      .replace(/ı/g, "i")
+      .replace(/ö/g, "o")
+      .replace(/ş/g, "s")
+      .replace(/ü/g, "u") + ".png";
 
-    productImg = await loadProxyImage(
-      "./canvas/products/" + fileName,
-      {
-        w:1600,
-        h:1200,
-        fit:"contain",
-        output:"png"
-      }
-    );
+  const localPath = "/canvas/products/" + fileName;
 
-  } catch(e) {
-
+  try {
+    // LOCAL -> normal yükleme (proxy’ye gerek yok)
+    productImg = await loadImage(localPath);
+  } catch (e) {
     try {
-
-      productImg = await loadProxyImage(deal.image_url, {
-        w:1600,
-        h:1200,
-        fit:"cover",
-        output:"jpg",
-        q:96
-      });
-
-    } catch(err) {
-
+      // REMOTE -> proxy ile yükle
+      if (deal?.image_url) {
+        productImg = await loadProxyImage(deal.image_url, {
+          w: 1600,
+          h: 1200,
+          fit: "cover",
+          output: "jpg",
+          q: 96,
+        });
+      }
+    } catch (err) {
       productImg = null;
-
     }
-
   }
 
   drawBackground(ctx, productImg);
@@ -73,6 +59,7 @@ export async function renderPoster({ deal, business }) {
   drawProductInfo(ctx, deal);
   drawPriceBlock(ctx, deal);
 
+  // Tarih
   const dateText =
     dateRangeTR(deal.start_date, deal.end_date) +
     " TARİHLERİ ARASINDA GEÇERLİDİR";
