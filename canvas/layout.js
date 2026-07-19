@@ -1,104 +1,64 @@
-export const Layout = {
+export const LAYOUT = {
 
-    canvas: {
-        width: 1080,
-        height: 1080,
-        padding: 48
-    },
+  logo:{
+    x:0,
+    y:20,
+    w:1080,
+    h:120
+  },
 
-    header: {
-        height: 170
-    },
+  product:{
+    x:170,
+    y:120,
+    w:930,
+    h:760
+  },
 
-    logo: {
-        x: 150,
-        y: 26,
-        w: 780,
-        h: 118
-    },
+  leftPanel:{
+    width:185
+  },
 
-    divider: {
-        y: 168,
-        margin: 140,
-        thickness: 3
-    },
+  title:{
+    x:50,
+    y:260,
+    width:390
+  },
 
-    hero: {
-        x: 315,
-        y: 135,
-        w: 720,
-        h: 640
-    },
+  unit:{
+    x:50,
+    y:500
+  },
 
-    productGlow: {
-        x: 760,
-        y: 430,
-        radius: 360
-    },
+  hotBadge:{
+    x:45,
+    y:620
+  },
 
-    infoPanel: {
-        x: 48,
-        y: 210,
-        w: 430,
-        h: 335,
-        radius: 28
-    },
+  discount:{
+    x:935,
+    y:220,
+    r:82
+  },
 
-    category: {
-        x: 72,
-        y: 255
-    },
+  oldPrice:{
+    x:65,
+    y:800
+  },
 
-    title: {
-        x: 70,
-        y: 330,
-        width: 395,
-        lineHeight: 1.05
-    },
+  priceCard:{
+    x:55,
+    y:835,
+    w:480,
+    h:125
+  },
 
-    unit: {
-        x: 70,
-        y: 505
-    },
+  newPrice:{
+    x:85,
+    y:925
+  },
 
-    oldPrice: {
-        x: 70,
-        y: 810
-    },
-
-    priceTag: {
-        x: 45,
-        y: 835,
-        w: 610,
-        h: 142,
-        radius: 26
-    },
-
-    newPrice: {
-        x: 82,
-        y: 935
-    },
-
-    badge: {
-        x: 845,
-        y: 845,
-        w: 180,
-        h: 112,
-        radius: 28
-    },
-
-    footer: {
-        x: 90,
-        y: 1030,
-        w: 900,
-        h: 42
-    },
-
-    safeArea: {
-        left: 45,
-        right: 1035,
-        top: 25,
-        bottom: 1055
-    }
+  date:{
+    y:1015
+  }
 
 };
