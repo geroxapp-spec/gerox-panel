@@ -26,17 +26,17 @@ export async function renderPoster({deal,business}){
 try {
 
   const fileName = deal.title
-    .toLocaleLowerCase("tr-TR")
-    .replace(/\(kg\)/gi, "_kg")
-    .replace(/[()]/g, "")
-    .replace(/\s+/g, "_")
-    .replace(/ç/g,"c")
-    .replace(/ğ/g,"g")
-    .replace(/ı/g,"i")
-    .replace(/ö/g,"o")
-    .replace(/ş/g,"s")
-    .replace(/ü/g,"u")
-    + ".png";
+  .toLocaleLowerCase("tr-TR")
+  .replace(/\(kg\)/gi, "")
+  .replace(/[()]/g, "")
+  .replace(/\s+/g, "_")
+  .replace(/ç/g,"c")
+  .replace(/ğ/g,"g")
+  .replace(/ı/g,"i")
+  .replace(/ö/g,"o")
+  .replace(/ş/g,"s")
+  .replace(/ü/g,"u")
+  + ".png";
 
   productImg = await loadProxyImage(
     "/products/" + fileName,
