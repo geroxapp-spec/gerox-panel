@@ -1,4 +1,5 @@
 import {C,upperTR,wrapLines,rr} from "./utils.js";
+import {LAYOUT} from "./layout.js";
 
 const CATEGORY_LABELS={
   manav:"MANAV",
@@ -77,7 +78,7 @@ export function drawProductInfo(ctx,deal){
   LAYOUT.title.y);
 
   // Ürün adı
-  const titleMaxWidth=430;
+  const titleMaxWidth=LAYOUT.title.width;
   let titleSize=94;
   let lines=[];
 
@@ -105,14 +106,22 @@ export function drawProductInfo(ctx,deal){
   ctx.shadowColor="rgba(0,0,0,0.95)";
   ctx.shadowBlur=14;
 
-  let y=340;
+  let y=LAYOUT.title.y+90;
 
   for(let i=0;i<lines.length;i++){
     ctx.strokeStyle="rgba(0,0,0,0.78)";
     ctx.lineWidth=5;
-    ctx.strokeText(lines[i],55,y);
+    ctx.strokeText(
+    lines[i],
+    LAYOUT.title.x,
+    y
+);
 
-    ctx.fillText(lines[i],55,y);
+    ctx.fillText(
+    lines[i],
+    LAYOUT.title.x,
+    y
+);
     y+=titleSize+8;
   }
 
@@ -129,18 +138,35 @@ export function drawProductInfo(ctx,deal){
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(55,unitY+38);
-    ctx.lineTo(190,unitY+38);
+    ctx.moveTo(
+    LAYOUT.unit.x,
+    unitY+38
+);
+
+    ctx.lineTo(
+    LAYOUT.unit.x+135,
+    unitY+38
+);
     ctx.stroke();
   }else{
     ctx.strokeStyle=C.gold;
     ctx.lineWidth=5;
     ctx.beginPath();
-    ctx.moveTo(55,unitY+10);
-    ctx.lineTo(190,unitY+10);
+    ctx.moveTo(
+    LAYOUT.unit.x,
+    unitY+10
+);
+
+ctx.lineTo(
+    LAYOUT.unit.x+135,
+    unitY+10
+);
     ctx.stroke();
   }
 
   // Slogan yerine daha güçlü rozet
-  drawHotBadge(ctx,55,620);
-}
+  drawHotBadge(
+    ctx,
+    LAYOUT.hotBadge.x,
+    LAYOUT.hotBadge.y
+);
