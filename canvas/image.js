@@ -1,135 +1,66 @@
-import { cover } from "./utils.js";
-import { Layout } from "./layout.js";
+import {C,cover} from "./utils.js";
 
-export function drawProductImage(ctx, productImg) {
+export function drawProductImage(ctx,productImg){
+  const w=1080,h=660;
 
-    if (!productImg) return;
-
-    const hero = Layout.hero;
-
-    // =========================
-    // GOLD BACK LIGHT (DEPTH CORE)
-    // =========================
-
-    const glow = ctx.createRadialGradient(
-        Layout.productGlow.x,
-        Layout.productGlow.y,
-        20,
-        Layout.productGlow.x,
-        Layout.productGlow.y,
-        Layout.productGlow.radius
-    );
-
-    glow.addColorStop(0, "rgba(255,210,0,0.20)");
-    glow.addColorStop(0.35, "rgba(255,170,0,0.10)");
-    glow.addColorStop(1, "rgba(0,0,0,0)");
-
-    ctx.fillStyle = glow;
-    ctx.fillRect(0, 0, 1080, 1080);
-
-    // =========================
-    // MAIN PRODUCT RENDER
-    // =========================
-
+  if(productImg){
     ctx.save();
-
-    ctx.shadowColor = "rgba(0,0,0,0.65)";
-    ctx.shadowBlur = 60;
-    ctx.shadowOffsetY = 25;
-
-    ctx.filter = "saturate(1.15) contrast(1.1)";
-
-    cover(
-        ctx,
-        productImg,
-        hero.x,
-        hero.y,
-        hero.w,
-        hero.h,
-        0.56,
-        0.52
-    );
-
+    cover(ctx,productImg,0,0,w,h,0.5,0.42);
     ctx.restore();
-    ctx.filter = "none";
+  }
 
-    // =========================
-    // FLOOR SHADOW (REALISM)
-    // =========================
+  const top=ctx.createLinearGradient(0,0,0,180);
+  top.addColorStop(0,"rgba(0,0,0,0.55)");
+  top.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=top;
+  ctx.fillRect(0,0,1080,180);
 
-    const shadow = ctx.createRadialGradient(
-        760,
-        820,
-        40,
-        760,
-        820,
-        340
-    );
+  const bottom=ctx.createLinearGradient(0,h-260,0,h+10);
+  bottom.addColorStop(0,"rgba(3,3,3,0)");
+  bottom.addColorStop(1,"rgba(3,3,3,1)");
+  ctx.fillStyle=bottom;
+  ctx.fillRect(0,h-260,1080,270);
+}
 
-    shadow.addColorStop(0, "rgba(0,0,0,0.60)");
-    shadow.addColorStop(0.5, "rgba(0,0,0,0.20)");
-    shadow.addColorStop(1, "rgba(0,0,0,0)");
+export function drawDiscountBurst(ctx,discPercent){
+  if(!discPercent||discPercent<=0)return;
 
-    ctx.fillStyle = shadow;
+  const cx=930,cy=150,outerR=92,innerR=64,spikes=14,rotation=-0.15;
 
-    ctx.beginPath();
-    ctx.ellipse(760, 830, 260, 55, 0, 0, Math.PI * 2);
-    ctx.fill();
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rotation);
 
-    // =========================
-    // LEFT DARK DEPTH MASK
-    // =========================
+  ctx.shadowColor="rgba(0,0,0,0.5)";
+  ctx.shadowBlur=18;
+  ctx.shadowOffsetY=6;
 
-    const left = ctx.createLinearGradient(250, 0, 600, 0);
+  ctx.beginPath();
+  for(let i=0;i<spikes*2;i++){
+    const r=i%2===0?outerR:innerR;
+    const angle=(Math.PI/spikes)*i;
+    const px=Math.cos(angle)*r;
+    const py=Math.sin(angle)*r;
+    if(i===0){ctx.moveTo(px,py);}else{ctx.lineTo(px,py);}
+  }
+  ctx.closePath();
 
-    left.addColorStop(0, "rgba(0,0,0,0.95)");
-    left.addColorStop(0.6, "rgba(0,0,0,0.65)");
-    left.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle=C.gold;
+  ctx.fill();
 
-    ctx.fillStyle = left;
-    ctx.fillRect(220, 120, 360, 760);
+  ctx.restore();
 
-    // =========================
-    // TOP SOFT FADE
-    // =========================
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.rotate(rotation*0.3);
 
-    const top = ctx.createLinearGradient(0, hero.y, 0, hero.y + 180);
+  ctx.textAlign="center";
+  ctx.fillStyle="#111111";
+  ctx.font="900 40px Arial Black, Arial";
+  ctx.fillText("%"+discPercent,0,-2);
 
-    top.addColorStop(0, "rgba(0,0,0,0.75)");
-    top.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.font="800 15px Arial";
+  ctx.fillText("İNDİRİM",0,20);
 
-    ctx.fillStyle = top;
-    ctx.fillRect(hero.x, hero.y, hero.w, 200);
-
-    // =========================
-    // BOTTOM FADE (GROUND LOCK)
-    // =========================
-
-    const bottom = ctx.createLinearGradient(
-        0,
-        hero.y + hero.h - 260,
-        0,
-        hero.y + hero.h
-    );
-
-    bottom.addColorStop(0, "rgba(0,0,0,0)");
-    bottom.addColorStop(1, "rgba(0,0,0,0.85)");
-
-    ctx.fillStyle = bottom;
-    ctx.fillRect(hero.x, hero.y + hero.h - 260, hero.w, 260);
-
-    // =========================
-    // PREMIUM EDGE HIGHLIGHT
-    // =========================
-
-    ctx.save();
-    ctx.globalAlpha = 0.06;
-    ctx.strokeStyle = "#FFD400";
-    ctx.lineWidth = 2;
-
-    ctx.beginPath();
-    ctx.arc(760, 420, 260, Math.PI * 0.95, Math.PI * 1.7);
-    ctx.stroke();
-
-    ctx.restore();
+  ctx.restore();
 }
