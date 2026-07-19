@@ -1,3 +1,4 @@
+import {LAYOUT} from "./layout.js";
 import {loadProxyImage,dateRangeTR,C,rr} from "./utils.js";
 import {drawBackground} from "./background.js";
 import {drawLogo} from "./logo.js";
@@ -47,16 +48,15 @@ export async function renderPoster({deal,business}){
   const pillW=Math.min(900,textW+82);
   const pillH=42;
   const pillX=(1080-pillW)/2;
-  const pillY=1017;
-
+  const pillY=LAYOUT.date.y;
   ctx.save();
 
   // Üst ince çizgi
   ctx.strokeStyle="rgba(255,212,0,0.30)";
   ctx.lineWidth=1.2;
   ctx.beginPath();
-  ctx.moveTo(120,1000);
-  ctx.lineTo(960,1000);
+  ctx.moveTo(120,LAYOUT.date.y-17);
+  ctx.lineTo(960,LAYOUT.date.y-17);
   ctx.stroke();
 
   rr(ctx,pillX,pillY,pillW,pillH,21);
