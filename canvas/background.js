@@ -4,15 +4,18 @@ export function drawBackground(ctx,productImg){
   ctx.fillStyle="#020202";
   ctx.fillRect(0,0,1080,1080);
 
-  // Ürün görselinden bulanık atmosfer
-  if(productImg){
-    ctx.save();
-    ctx.globalAlpha=0.36;
-    ctx.filter="blur(18px) saturate(1.35) contrast(1.18)";
-    cover(ctx,productImg,-140,120,1360,820,0.58,0.52);
-    ctx.restore();
-    ctx.filter="none";
-  }
+  // Sağ tarafta hafif ışık
+  const glow=ctx.createRadialGradient(
+    760,420,80,
+    760,420,620
+);
+
+  glow.addColorStop(0,"rgba(255,185,0,.18)");
+  glow.addColorStop(.45,"rgba(255,120,0,.08)");
+  glow.addColorStop(1,"rgba(0,0,0,0)");
+
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,1080,1080);
 
   // Sağ tarafta sıcak market ışığı
   const spot=ctx.createRadialGradient(820,470,30,820,470,680);
@@ -31,7 +34,7 @@ export function drawBackground(ctx,productImg){
   ctx.fillRect(0,0,1080,280);
 
   // Sol yazı alanı
-  const left=ctx.createLinearGradient(0,0,720,0);
+  const left=ctx.createLinearGradient(0,0,540,0);
   left.addColorStop(0,"rgba(0,0,0,1)");
   left.addColorStop(0.52,"rgba(0,0,0,0.90)");
   left.addColorStop(1,"rgba(0,0,0,0)");
@@ -39,7 +42,7 @@ export function drawBackground(ctx,productImg){
   ctx.fillRect(
     0,
     140,
-    900,
+    680,
     780
 );
 
