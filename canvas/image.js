@@ -1,66 +1,60 @@
-import {C,cover} from "./utils.js";
+import {cover} from "./utils.js";
 
 export function drawProductImage(ctx,productImg){
-  const w=1080,h=660;
+  if(!productImg)return;
 
-  if(productImg){
-    ctx.save();
-    cover(ctx,productImg,0,0,w,h,0.5,0.42);
-    ctx.restore();
-  }
+  // Ürün artık kutu gibi değil, afiş yüzeyine yayılıyor
+  const x=230;
+  const y=155;
+  const w=890;
+  const h=720;
 
-  const top=ctx.createLinearGradient(0,0,0,180);
-  top.addColorStop(0,"rgba(0,0,0,0.55)");
-  top.addColorStop(1,"rgba(0,0,0,0)");
-  ctx.fillStyle=top;
-  ctx.fillRect(0,0,1080,180);
-
-  const bottom=ctx.createLinearGradient(0,h-260,0,h+10);
-  bottom.addColorStop(0,"rgba(3,3,3,0)");
-  bottom.addColorStop(1,"rgba(3,3,3,1)");
-  ctx.fillStyle=bottom;
-  ctx.fillRect(0,h-260,1080,270);
-}
-
-export function drawDiscountBurst(ctx,discPercent){
-  if(!discPercent||discPercent<=0)return;
-
-  const cx=930,cy=150,outerR=92,innerR=64,spikes=14,rotation=-0.15;
+  // Ürün arkasına sıcak glow
+  const glow=ctx.createRadialGradient(780,510,80,780,510,560);
+  glow.addColorStop(0,"rgba(255,212,0,0.18)");
+  glow.addColorStop(0.45,"rgba(255,140,0,0.08)");
+  glow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=glow;
+  ctx.fillRect(180,120,900,780);
 
   ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(rotation);
-
-  ctx.shadowColor="rgba(0,0,0,0.5)";
-  ctx.shadowBlur=18;
-  ctx.shadowOffsetY=6;
 
   ctx.beginPath();
-  for(let i=0;i<spikes*2;i++){
-    const r=i%2===0?outerR:innerR;
-    const angle=(Math.PI/spikes)*i;
-    const px=Math.cos(angle)*r;
-    const py=Math.sin(angle)*r;
-    if(i===0){ctx.moveTo(px,py);}else{ctx.lineTo(px,py);}
-  }
-  ctx.closePath();
+  ctx.rect(x,y,w,h);
+  ctx.clip();
 
-  ctx.fillStyle=C.gold;
-  ctx.fill();
+  ctx.filter="saturate(1.18) contrast(1.12)";
+  cover(ctx,productImg,x,y,w,h,0.60,0.52);
+  ctx.filter="none";
 
   ctx.restore();
 
-  ctx.save();
-  ctx.translate(cx,cy);
-  ctx.rotate(rotation*0.3);
+  // Sol geçiş
+  const leftFade=ctx.createLinearGradient(210,0,560,0);
+  leftFade.addColorStop(0,"rgba(0,0,0,1)");
+  leftFade.addColorStop(0.54,"rgba(0,0,0,0.78)");
+  leftFade.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=leftFade;
+  ctx.fillRect(190,145,410,760);
 
-  ctx.textAlign="center";
-  ctx.fillStyle="#111111";
-  ctx.font="900 40px Arial Black, Arial";
-  ctx.fillText("%"+discPercent,0,-2);
+  // Üstten karartma
+  const topFade=ctx.createLinearGradient(0,y,0,y+170);
+  topFade.addColorStop(0,"rgba(0,0,0,0.82)");
+  topFade.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=topFade;
+  ctx.fillRect(x,y,w,180);
 
-  ctx.font="800 15px Arial";
-  ctx.fillText("İNDİRİM",0,20);
+  // Alttan karartma
+  const bottomFade=ctx.createLinearGradient(0,y+h-240,0,y+h);
+  bottomFade.addColorStop(0,"rgba(0,0,0,0)");
+  bottomFade.addColorStop(1,"rgba(0,0,0,0.90)");
+  ctx.fillStyle=bottomFade;
+  ctx.fillRect(x,y+h-250,w,250);
 
-  ctx.restore();
+  // Sağ alt zemin gölgesi
+  const shadow=ctx.createRadialGradient(760,815,20,760,815,370);
+  shadow.addColorStop(0,"rgba(0,0,0,0.72)");
+  shadow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=shadow;
+  ctx.fillRect(360,650,740,280);
 }
