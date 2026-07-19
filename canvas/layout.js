@@ -2,63 +2,63 @@ export const LAYOUT = {
 
   logo:{
     x:0,
-    y:20,
+    y:18,
     w:1080,
-    h:120
+    h:112
   },
 
   product:{
-    x:170,
-    y:120,
-    w:930,
-    h:760
+    x:215,
+    y:135,
+    w:865,
+    h:735
   },
 
   leftPanel:{
-    width:185
+    width:205
   },
 
   title:{
-    x:50,
-    y:260,
-    width:390
+    x:48,
+    y:245,
+    width:315
   },
 
   unit:{
-    x:50,
-    y:500
+    x:48,
+    y:505
   },
 
   hotBadge:{
-    x:45,
-    y:620
+    x:48,
+    y:625
   },
 
   discount:{
-    x:935,
+    x:930,
     y:220,
-    r:82
+    r:70
   },
 
   oldPrice:{
     x:65,
-    y:800
+    y:805
   },
 
   priceCard:{
-    x:55,
-    y:835,
-    w:480,
-    h:125
+    x:45,
+    y:840,
+    w:595,
+    h:150
   },
 
   newPrice:{
-    x:85,
-    y:925
+    x:82,
+    y:948
   },
 
   date:{
-    y:1015
+    y:1018
   }
 
 };
