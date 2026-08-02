@@ -1,6 +1,5 @@
 import {money, splitMoney, rr} from "./utils.js";
 
-// Sağı sivri biten kurdele/flama şekli
 function drawRibbon(ctx, x, y, w, h, discText){
   const notch = h*0.42;
 
@@ -45,7 +44,7 @@ export function drawPriceBlock(ctx, deal, layout){
   const nw   = Number(deal.new_price||0);
   const disc = old>0 ? Math.max(0, Math.round(((old-nw)/old)*100)) : 0;
 
-  const { cardX, cardW, cardBottomY, oldPriceRowY, padX, cardR } = layout;
+  const { cardX, cardW, oldPriceRowY, plateY, plateH, padX } = layout;
 
   // ---------- Eski fiyat ----------
   let oldTxtW = 0;
@@ -66,7 +65,7 @@ export function drawPriceBlock(ctx, deal, layout){
     ctx.restore();
   }
 
-  // ---------- İndirim kurdelesi (eski fiyatın sağında, aynı sırada) ----------
+  // ---------- İndirim kurdelesi ----------
   if(disc>0){
     const ribbonW = 190;
     const ribbonH = 72;
@@ -75,13 +74,10 @@ export function drawPriceBlock(ctx, deal, layout){
     drawRibbon(ctx, ribbonX, ribbonY, ribbonW, ribbonH, disc);
   }
 
-// ---------- Kartın üstüne binen "altın plaka" (SABİT, asla taşmaz) ----------
+  // ---------- Altın plaka (içerikten hemen sonra, boşluksuz) ----------
   const plateW = cardW + 70;
-  const plateH = 190;
   const plateX = cardX - 8;
-  const plateY = cardBottomY - 60;
-  
-  // dip: 855-60+190 = 985 → tarihten önce biter
+
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.55)";
   ctx.shadowBlur = 26;
@@ -96,7 +92,6 @@ export function drawPriceBlock(ctx, deal, layout){
   ctx.fill();
   ctx.restore();
 
-  // İç kabartma çerçeve (embossed görünüm)
   ctx.save();
   rr(ctx, plateX+6, plateY+6, plateW-12, plateH-12, 20);
   ctx.strokeStyle = "rgba(80,55,0,0.55)";
