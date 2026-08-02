@@ -1,74 +1,70 @@
-import {cover,drawNoise} from "./utils.js";
+export function drawBackground(ctx, productImg){
+  const W=1080, H=1080;
 
-export function drawBackground(ctx,productImg){
-  ctx.fillStyle="#020202";
-  ctx.fillRect(0,0,1080,1080);
+  // Koyu zemin
+  const base=ctx.createRadialGradient(540,540,0,540,540,900);
+  base.addColorStop(0,"#1a1200");
+  base.addColorStop(0.5,"#0d0900");
+  base.addColorStop(1,"#000000");
+  ctx.fillStyle=base;
+  ctx.fillRect(0,0,W,H);
 
-  // Sağ tarafta hafif ışık
-  const glow=ctx.createRadialGradient(
-    760,420,80,
-    760,420,620
-);
+  // Sağ taraf dramatik altın ışık (ürün arkası)
+  const rightLight=ctx.createRadialGradient(820,420,0,820,420,580);
+  rightLight.addColorStop(0,"rgba(255,200,40,0.22)");
+  rightLight.addColorStop(0.3,"rgba(180,100,0,0.14)");
+  rightLight.addColorStop(0.6,"rgba(80,40,0,0.08)");
+  rightLight.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=rightLight;
+  ctx.fillRect(0,0,W,H);
 
-  glow.addColorStop(0,"rgba(255,185,0,.18)");
-  glow.addColorStop(.45,"rgba(255,120,0,.08)");
-  glow.addColorStop(1,"rgba(0,0,0,0)");
+  // Sol alt sıcak ışık
+  const leftLight=ctx.createRadialGradient(180,820,0,180,820,400);
+  leftLight.addColorStop(0,"rgba(255,180,0,0.10)");
+  leftLight.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=leftLight;
+  ctx.fillRect(0,0,W,H);
 
-  ctx.fillStyle=glow;
-  ctx.fillRect(0,0,1080,1080);
+  // Altın parçacık doku
+  drawGoldParticles(ctx,W,H);
 
-  // Sağ tarafta sıcak market ışığı
-  const spot=ctx.createRadialGradient(820,470,30,820,470,680);
-  spot.addColorStop(0,"rgba(255,214,0,0.30)");
-  spot.addColorStop(0.35,"rgba(255,128,0,0.13)");
-  spot.addColorStop(1,"rgba(0,0,0,0)");
-  ctx.fillStyle=spot;
-  ctx.fillRect(0,0,1080,1080);
+  // Üst karartma (logo alanı)
+  const topDark=ctx.createLinearGradient(0,0,0,180);
+  topDark.addColorStop(0,"rgba(0,0,0,0.85)");
+  topDark.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=topDark;
+  ctx.fillRect(0,0,W,180);
 
-  // Üst logo alanı
-  const top=ctx.createLinearGradient(0,0,0,260);
-  top.addColorStop(0,"rgba(0,0,0,1)");
-  top.addColorStop(0.65,"rgba(0,0,0,0.92)");
-  top.addColorStop(1,"rgba(0,0,0,0.30)");
-  ctx.fillStyle=top;
-  ctx.fillRect(0,0,1080,280);
+  // Alt karartma (tarih alanı)
+  const botDark=ctx.createLinearGradient(0,900,0,H);
+  botDark.addColorStop(0,"rgba(0,0,0,0)");
+  botDark.addColorStop(1,"rgba(0,0,0,0.90)");
+  ctx.fillStyle=botDark;
+  ctx.fillRect(0,900,W,180);
+}
 
-  // Sol yazı alanı
-  const left=ctx.createLinearGradient(0,0,540,0);
-  left.addColorStop(0,"rgba(0,0,0,1)");
-  left.addColorStop(0.52,"rgba(0,0,0,0.90)");
-  left.addColorStop(1,"rgba(0,0,0,0)");
-  ctx.fillStyle=left;
-  ctx.fillRect(
-    0,
-    140,
-    680,
-    780
-);
+function drawGoldParticles(ctx,W,H){
+  const rng=mulberry32(42);
+  ctx.save();
+  for(let i=0;i<320;i++){
+    const x=rng()*W;
+    const y=rng()*H;
+    const r=rng()*1.8+0.3;
+    const a=rng()*0.45+0.05;
+    ctx.beginPath();
+    ctx.arc(x,y,r,0,Math.PI*2);
+    ctx.fillStyle=`rgba(255,${180+Math.floor(rng()*60)},0,${a})`;
+    ctx.fill();
+  }
+  ctx.restore();
+}
 
-  // Alt fiyat zemini
-  const bottom=ctx.createLinearGradient(0,620,0,1080);
-  bottom.addColorStop(0,"rgba(0,0,0,0)");
-  bottom.addColorStop(0.50,"rgba(0,0,0,0.84)");
-  bottom.addColorStop(1,"rgba(0,0,0,1)");
-  ctx.fillStyle=bottom;
-  ctx.fillRect(0,580,1080,500);
-
-  // Hafif sahne zemini
-  const floor=ctx.createRadialGradient(520,885,40,520,885,620);
-  floor.addColorStop(0,"rgba(255,184,0,0.12)");
-  floor.addColorStop(0.45,"rgba(90,45,0,0.10)");
-  floor.addColorStop(1,"rgba(0,0,0,0)");
-  ctx.fillStyle=floor;
-  ctx.fillRect(0,700,1080,380);
-
-  // Vignette
-  const vignette=ctx.createRadialGradient(540,520,260,540,520,830);
-  vignette.addColorStop(0,"rgba(0,0,0,0)");
-  vignette.addColorStop(1,"rgba(0,0,0,0.82)");
-  ctx.fillStyle=vignette;
-  ctx.fillRect(0,0,1080,1080);
-
-  // Çok hafif doku
-  drawNoise(ctx,1080,1080,0.024);
+function mulberry32(seed){
+  let s=seed;
+  return function(){
+    s|=0; s=s+0x6D2B79F5|0;
+    let t=Math.imul(s^s>>>15,1|s);
+    t=t+Math.imul(t^t>>>7,61|t)^t;
+    return ((t^t>>>14)>>>0)/4294967296;
+  };
 }
