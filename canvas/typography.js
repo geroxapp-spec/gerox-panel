@@ -1,201 +1,120 @@
 import {C, upperTR, wrapLines, rr} from "./utils.js";
-import {LAYOUT} from "./layout.js";
 
-const CATEGORY_LABELS = {
-  manav: "MANAV",
-  kasap: "KASAP",
-  sut: "SÜT ÜRÜNLERİ",
-  bakliyat: "BAKLİYAT",
-  cay: "ÇAY & KAHVE",
-  temizlik: "TEMİZLİK",
-  kisisel: "KİŞİSEL BAKIM"
+const CATEGORY_LABELS={
+  manav:"MANAV", kasap:"KASAP", sut:"SÜT ÜRÜNLERİ",
+  bakliyat:"BAKLİYAT", cay:"ÇAY & KAHVE",
+  temizlik:"TEMİZLİK", kisisel:"KİŞİSEL BAKIM"
 };
 
-function categoryLabel(cat) {
-  return CATEGORY_LABELS[String(cat || "").toLowerCase()] || upperTR(cat || "FIRSAT");
+function categoryLabel(cat){
+  return CATEGORY_LABELS[String(cat||"").toLowerCase()]||upperTR(cat||"FIRSAT");
 }
 
-function parseTitle(title) {
-  let t = String(title || "").trim();
-  let unit = "";
-
-  const m = t.match(/\(([^)]+)\)/);
-
-  if (m) {
-    unit = upperTR(m[1]);
-    t = t.replace(m[0], "").trim();
-  } else {
-    const m2 = t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
-
-    if (m2) {
-      unit = upperTR(m2[1]);
-      t = t.replace(m2[0], "").trim();
-    }
+function parseTitle(title){
+  let t=String(title||"").trim();
+  let unit="";
+  const m=t.match(/\(([^)]+)\)/);
+  if(m){ unit=upperTR(m[1]); t=t.replace(m[0],"").trim(); }
+  else{
+    const m2=t.match(/\b(\d+\s*(KG|GR|G|LT|L|ML|LİTRE|LITRE|ADET|PKT))$/i);
+    if(m2){ unit=upperTR(m2[1]); t=t.replace(m2[0],"").trim(); }
   }
-
-  return {
-    name: upperTR(t),
-    unit
-  };
+  return { name:upperTR(t), unit:unit };
 }
 
-function drawHotBadge(ctx, x, y) {
+export function drawProductInfo(ctx, deal){
+  const parsed=parseTitle(deal.title);
+  const cardX=28;
+  const cardY=170;
+  const cardW=490;
+  const cardH=580;
+
+  // Glassmorphism kart
   ctx.save();
+  ctx.shadowColor="rgba(255,180,0,0.18)";
+  ctx.shadowBlur=32;
+  rr(ctx,cardX,cardY,cardW,cardH,28);
 
-  const grad = ctx.createLinearGradient(x, y, x + 250, y + 54);
-  grad.addColorStop(0, "#FF3B00");
-  grad.addColorStop(1, "#FF8A00");
-
-  rr(ctx, x, y, 245, 54, 27);
-  ctx.fillStyle = grad;
+  // Kart arka planı
+  const cardGrad=ctx.createLinearGradient(cardX,cardY,cardX+cardW,cardY+cardH);
+  cardGrad.addColorStop(0,"rgba(30,20,5,0.82)");
+  cardGrad.addColorStop(1,"rgba(10,8,0,0.88)");
+  ctx.fillStyle=cardGrad;
   ctx.fill();
 
-  ctx.strokeStyle = "rgba(255,212,0,0.72)";
-  ctx.lineWidth = 2;
+  // Kart border (altın)
+  ctx.strokeStyle="rgba(255,200,40,0.55)";
+  ctx.lineWidth=1.8;
   ctx.stroke();
-
-  ctx.shadowColor = "rgba(255,90,0,0.45)";
-  ctx.shadowBlur = 14;
-
-  ctx.textAlign = "center";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "800 25px Arial Black, Arial";
-  ctx.fillText("SICAK FIRSAT", x + 122, y + 36);
-
   ctx.restore();
-}
 
-export function drawProductInfo(ctx, deal) {
-
-  const parsed = parseTitle(deal.title);
-
-  ctx.textAlign = "left";
+  // Kart üst altın çizgi
+  ctx.save();
+  ctx.strokeStyle=C.gold;
+  ctx.lineWidth=3;
+  ctx.beginPath();
+  ctx.moveTo(cardX+28,cardY+62);
+  ctx.lineTo(cardX+cardW-28,cardY+62);
+  ctx.stroke();
+  ctx.restore();
 
   // Kategori
-  ctx.fillStyle = C.gold;
-  ctx.font = "800 30px Arial Black, Arial";
-  ctx.fillText(
-    categoryLabel(deal.category),
-    LAYOUT.title.x,
-    LAYOUT.title.y
-  );
+  ctx.save();
+  ctx.textAlign="left";
+  ctx.fillStyle=C.gold;
+  ctx.font="700 26px Arial";
+  ctx.fillText(categoryLabel(deal.category),cardX+32,cardY+46);
+  ctx.restore();
 
   // Ürün adı
-  const titleMaxWidth = LAYOUT.title.width;
+  ctx.save();
+  ctx.textAlign="left";
+  let titleSize=92;
+  let lines=[];
+  const maxTitleW=cardW-56;
 
-  let titleSize = 94;
-  let lines = [];
-
-  while (titleSize >= 56) {
-
-    lines = wrapLines(
-      ctx,
-      parsed.name,
-      titleMaxWidth,
-      titleSize,
-      "Impact, Arial Black, Arial",
-      3
-    );
-
-    ctx.font = "900 " + titleSize + "px Impact, Arial Black, Arial";
-
-    let ok = true;
-
-    for (let i = 0; i < lines.length; i++) {
-      if (ctx.measureText(lines[i]).width > titleMaxWidth) {
-        ok = false;
-      }
+  while(titleSize>=52){
+    lines=wrapLines(ctx,parsed.name,maxTitleW,titleSize,"Impact, Arial Black, Arial",3);
+    ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
+    let ok=true;
+    for(let i=0;i<lines.length;i++){
+      if(ctx.measureText(lines[i]).width>maxTitleW) ok=false;
     }
-
-    if (ok) break;
-
-    titleSize -= 4;
+    if(ok) break;
+    titleSize-=4;
   }
 
-  ctx.fillStyle = C.white;
-  ctx.font = "900 " + titleSize + "px Impact, Arial Black, Arial";
+  ctx.font="900 "+titleSize+"px Impact, Arial Black, Arial";
+  ctx.shadowColor="rgba(0,0,0,0.95)";
+  ctx.shadowBlur=12;
 
-  ctx.shadowColor = "rgba(0,0,0,0.95)";
-  ctx.shadowBlur = 14;
+  let ty=cardY+148;
+  for(let i=0;i<lines.length;i++){
+    ctx.strokeStyle="rgba(0,0,0,0.70)";
+    ctx.lineWidth=5;
+    ctx.strokeText(lines[i],cardX+32,ty);
+    ctx.fillStyle="#FFFFFF";
+    ctx.fillText(lines[i],cardX+32,ty);
+    ty+=titleSize+6;
+  }
+  ctx.restore();
 
-  let y = LAYOUT.title.y + 90;
-
-  for (let i = 0; i < lines.length; i++) {
-
-    ctx.strokeStyle = "rgba(0,0,0,0.78)";
-    ctx.lineWidth = 5;
-
-    ctx.strokeText(
-      lines[i],
-      LAYOUT.title.x,
-      y
-    );
-
-    ctx.fillText(
-      lines[i],
-      LAYOUT.title.x,
-      y
-    );
-
-    y += titleSize + 8;
+  // Birim (KG vs.)
+  if(parsed.unit){
+    ctx.save();
+    ctx.textAlign="left";
+    ctx.fillStyle="rgba(255,255,255,0.85)";
+    ctx.font="700 38px Arial";
+    ctx.fillText("("+parsed.unit+")",cardX+32,ty+18);
+    ctx.restore();
+    ty+=60;
   }
 
-  ctx.shadowBlur = 0;
-
-  // Birim
-  const unitY = y + 25;
-
-  if (parsed.unit) {
-
-    ctx.fillStyle = C.gold;
-    ctx.font = "900 78px Impact, Arial Black, Arial";
-
-    ctx.fillText(
-      parsed.unit,
-      LAYOUT.unit.x,
-      unitY
-    );
-
-    ctx.strokeStyle = C.gold;
-    ctx.lineWidth = 5;
-
-    ctx.beginPath();
-    ctx.moveTo(
-      LAYOUT.unit.x,
-      unitY + 38
-    );
-
-    ctx.lineTo(
-      LAYOUT.unit.x + 135,
-      unitY + 38
-    );
-
-    ctx.stroke();
-
-  } else {
-
-    ctx.strokeStyle = C.gold;
-    ctx.lineWidth = 5;
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      LAYOUT.unit.x,
-      unitY + 10
-    );
-
-    ctx.lineTo(
-      LAYOUT.unit.x + 135,
-      unitY + 10
-    );
-
-    ctx.stroke();
-  }
-
-  // Rozet
-  drawHotBadge(
-    ctx,
-    LAYOUT.hotBadge.x,
-    LAYOUT.hotBadge.y
-  );
+  // Kaliteli • Ekonomik • Güvenilir
+  ctx.save();
+  ctx.textAlign="left";
+  ctx.fillStyle="rgba(255,255,255,0.55)";
+  ctx.font="500 22px Arial";
+  ctx.fillText("Kaliteli  •  Ekonomik  •  Güvenilir",cardX+32,ty+30);
+  ctx.restore();
 }
