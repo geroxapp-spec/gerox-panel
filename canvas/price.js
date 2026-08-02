@@ -1,120 +1,127 @@
-import {C, money, splitMoney, rr} from "./utils.js";
+import {money, splitMoney} from "./utils.js";
 
-export function drawPriceBlock(ctx, deal){
-  const old=Number(deal.old_price||0);
-  const nw=Number(deal.new_price||0);
-  const disc=old>0?Math.max(0,Math.round(((old-nw)/old)*100)):0;
+function roundRectCorners(ctx, x, y, w, h, r){
+  const tl=r.tl||0, tr=r.tr||0, br=r.br||0, bl=r.bl||0;
+  ctx.beginPath();
+  ctx.moveTo(x+tl, y);
+  ctx.lineTo(x+w-tr, y);
+  ctx.arcTo(x+w, y, x+w, y+tr, tr);
+  ctx.lineTo(x+w, y+h-br);
+  ctx.arcTo(x+w, y+h, x+w-br, y+h, br);
+  ctx.lineTo(x+bl, y+h);
+  ctx.arcTo(x, y+h, x, y+h-bl, bl);
+  ctx.lineTo(x, y+tl);
+  ctx.arcTo(x, y, x+tl, y, tl);
+  ctx.closePath();
+}
 
-  const cardX=28;
-  const cardY=170;
-  const cardW=490;
+export function drawPriceBlock(ctx, deal, layout){
+  const old  = Number(deal.old_price||0);
+  const nw   = Number(deal.new_price||0);
+  const disc = old>0 ? Math.max(0, Math.round(((old-nw)/old)*100)) : 0;
 
-  // Eski fiyat üstü çizgili
+  const { cardX, cardW, cardBottomY, priceAreaH, padX, cardR } = layout;
+
+  const goldY = cardBottomY - priceAreaH;
+  const goldH = priceAreaH;
+
+  // ---------- Eski fiyat (gold barın hemen üstü) ----------
   if(old>0){
-    const txt=money(old);
+    const txt = money(old);
     ctx.save();
-    ctx.textAlign="left";
-    ctx.fillStyle="rgba(255,255,255,0.55)";
-    ctx.font="600 32px Arial";
-    ctx.fillText(txt,cardX+32,cardY+cardW-10);
-    const tw=ctx.measureText(txt).width;
-    ctx.strokeStyle="rgba(255,80,80,0.90)";
-    ctx.lineWidth=3;
+    ctx.textAlign = "left";
+    ctx.fillStyle = "rgba(255,255,255,0.55)";
+    ctx.font = "600 28px Arial";
+    const oldY = goldY - 16;
+    ctx.fillText(txt, cardX+padX, oldY);
+    const tw = ctx.measureText(txt).width;
+    ctx.strokeStyle = "rgba(255,90,90,0.85)";
+    ctx.lineWidth = 2.6;
     ctx.beginPath();
-    ctx.moveTo(cardX+32,cardY+cardW-24);
-    ctx.lineTo(cardX+32+tw,cardY+cardW-24);
+    ctx.moveTo(cardX+padX, oldY-11);
+    ctx.lineTo(cardX+padX+tw, oldY-11);
     ctx.stroke();
     ctx.restore();
   }
 
-  // Altın fiyat kartı
-  const priceCardX=cardX;
-  const priceCardY=cardY+cardW+12;
-  const priceCardW=cardW;
-  const priceCardH=130;
-
+  // ---------- Altın alt bar (kartla kaynaşmış) ----------
   ctx.save();
-  ctx.shadowColor="rgba(255,180,0,0.45)";
-  ctx.shadowBlur=28;
-  rr(ctx,priceCardX,priceCardY,priceCardW,priceCardH,22);
-
-  const pg=ctx.createLinearGradient(priceCardX,priceCardY,priceCardX,priceCardY+priceCardH);
-  pg.addColorStop(0,"#C8920A");
-  pg.addColorStop(0.3,"#FFD700");
-  pg.addColorStop(0.7,"#E6A800");
-  pg.addColorStop(1,"#8B6200");
-  ctx.fillStyle=pg;
+  roundRectCorners(ctx, cardX, goldY, cardW, goldH, {tl:0, tr:0, br:cardR, bl:cardR});
+  const pg = ctx.createLinearGradient(cardX, goldY, cardX, goldY+goldH);
+  pg.addColorStop(0,    "#8B6200");
+  pg.addColorStop(0.18, "#FFD700");
+  pg.addColorStop(0.55, "#F2B800");
+  pg.addColorStop(1,    "#9C7100");
+  ctx.fillStyle = pg;
   ctx.fill();
-
-  ctx.strokeStyle="rgba(255,255,180,0.60)";
-  ctx.lineWidth=2;
-  ctx.stroke();
   ctx.restore();
 
-  // Fiyat yazısı
-  const p=splitMoney(nw);
-  let size=96;
-  ctx.font="900 "+size+"px Impact, Arial Black";
-  while(ctx.measureText(p.lira).width>priceCardW-180 && size>60) size-=4;
+  // ÖZEL FİYAT etiketi
+  ctx.save();
+  ctx.textAlign = "left";
+  ctx.fillStyle = "rgba(40,25,0,0.62)";
+  ctx.font = "700 19px Arial";
+  ctx.fillText("ÖZEL FİYAT", cardX+padX, goldY+30);
+  ctx.restore();
 
-  const fy=priceCardY+priceCardH-18;
-  const fx=priceCardX+32;
+  // ---------- Yeni fiyat ----------
+  const p = splitMoney(nw);
+  let size = 84;
+  ctx.font = "900 "+size+"px Impact, Arial Black, Arial";
+  while(ctx.measureText(p.lira).width > cardW-220 && size>56) size -= 4;
+
+  const fy = goldY + goldH - 26;
+  const fx = cardX + padX;
 
   ctx.save();
-  ctx.textAlign="left";
-  ctx.shadowColor="rgba(0,0,0,0.55)";
-  ctx.shadowBlur=8;
+  ctx.textAlign = "left";
+  ctx.fillStyle = "#1a0f00";
+  ctx.font = "900 "+size+"px Impact, Arial Black, Arial";
+  ctx.fillText(p.lira, fx, fy);
+  const lw = ctx.measureText(p.lira).width;
 
-  // Lira
-  ctx.fillStyle="#1a0f00";
-  ctx.font="900 "+size+"px Impact, Arial Black, Arial";
-  ctx.fillText(p.lira,fx,fy);
-  const lw=ctx.measureText(p.lira).width;
+  ctx.font = "900 "+Math.round(size*0.46)+"px Impact, Arial Black, Arial";
+  ctx.fillText(","+p.kurus, fx+lw+6, fy-6);
+  const kw = ctx.measureText(","+p.kurus).width;
 
-  // Kuruş
-  ctx.font="900 "+Math.round(size*0.48)+"px Impact, Arial Black, Arial";
-  ctx.fillText(","+p.kurus,fx+lw+6,fy-8);
-  const kw=ctx.measureText(","+p.kurus).width;
-
-  // TL
-  ctx.font="700 "+Math.round(size*0.42)+"px Arial";
-  ctx.fillText("₺",fx+lw+kw+18,fy-8);
+  ctx.font = "700 "+Math.round(size*0.40)+"px Arial";
+  ctx.fillText("₺", fx+lw+kw+16, fy-6);
   ctx.restore();
 
-  // İndirim rozeti (kırmızı, fiyat kartının sağ üstünde)
+  // ---------- İndirim rozeti (kenardan taşan, eğik) ----------
   if(disc>0){
-    const bx=priceCardX+priceCardW-20;
-    const by=priceCardY-20;
-    const bw=148;
-    const bh=80;
+    const bw = 138, bh = 72;
+    const bx = cardX + cardW - 38;
+    const by = goldY - 4;
 
     ctx.save();
-    ctx.shadowColor="rgba(200,0,0,0.55)";
-    ctx.shadowBlur=18;
-    rr(ctx,bx-bw,by,bw,bh,16);
+    ctx.translate(bx, by);
+    ctx.rotate(-7*Math.PI/180);
 
-    const rg=ctx.createLinearGradient(bx-bw,by,bx,by+bh);
-    rg.addColorStop(0,"#cc0000");
-    rg.addColorStop(1,"#ff2200");
-    ctx.fillStyle=rg;
+    ctx.shadowColor = "rgba(180,0,0,0.55)";
+    ctx.shadowBlur = 16;
+
+    roundRectCorners(ctx, -bw/2, -bh/2, bw, bh, {tl:14,tr:14,br:14,bl:14});
+    const rg = ctx.createLinearGradient(-bw/2,-bh/2,bw/2,bh/2);
+    rg.addColorStop(0, "#B80000");
+    rg.addColorStop(1, "#FF2A00");
+    ctx.fillStyle = rg;
     ctx.fill();
 
-    ctx.strokeStyle="rgba(255,150,150,0.50)";
-    ctx.lineWidth=1.5;
+    ctx.strokeStyle = "rgba(255,180,180,0.55)";
+    ctx.lineWidth = 1.4;
     ctx.stroke();
-    ctx.restore();
+    ctx.shadowBlur = 0;
 
-    ctx.save();
-    ctx.textAlign="center";
-    const bcx=bx-bw/2;
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "800 28px Arial Black, Arial";
+    ctx.fillText("%"+disc, 0, -2);
 
-    ctx.fillStyle="#FFFFFF";
-    ctx.font="800 30px Arial Black, Arial";
-    ctx.fillText("%"+disc,bcx,by+34);
+    ctx.fillStyle = "#FFE3E3";
+    ctx.font = "700 17px Arial";
+    ctx.fillText("İNDİRİM", 0, 22);
 
-    ctx.fillStyle="#FFE0E0";
-    ctx.font="700 20px Arial";
-    ctx.fillText("İNDİRİM",bcx,by+60);
     ctx.restore();
   }
 }
