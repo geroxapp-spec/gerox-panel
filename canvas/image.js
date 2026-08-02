@@ -1,57 +1,87 @@
-import {cover} from "./utils.js";
-import {LAYOUT} from "./layout.js";
+export function drawProductImage(ctx, productImg){
+  if(!productImg){
+    ctx.save();
+    ctx.textAlign="center";
+    ctx.fillStyle="rgba(255,255,255,0.08)";
+    ctx.font="500 26px Arial";
+    ctx.fillText("Görsel Bulunamadı", 720, 490);
+    ctx.restore();
+    return;
+  }
 
-export function drawProductImage(ctx, productImg) {
-  if (!productImg) return;
+  const imgW = productImg.naturalWidth  || productImg.width  || 800;
+  const imgH = productImg.naturalHeight || productImg.height || 800;
 
-  const { x, y, w, h } = LAYOUT.product;
+  // Ürünün sığacağı alan - sağ taraf
+  const areaX = 340;
+  const areaY = 160;
+  const areaW = 700;
+  const areaH = 660;
 
-  // Ürün arkasına sıcak glow
-  const glow = ctx.createRadialGradient(780, 510, 80, 780, 510, 560);
-  glow.addColorStop(0, "rgba(255,212,0,0.18)");
-  glow.addColorStop(0.45, "rgba(255,140,0,0.08)");
-  glow.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = glow;
-  ctx.fillRect(180, 120, 900, 780);
+  // Orantılı boyut hesapla (contain)
+  const ratio  = Math.min(areaW / imgW, areaH / imgH);
+  const drawW  = imgW * ratio;
+  const drawH  = imgH * ratio;
 
+  // Alanın ortasına hizala
+  const drawX  = areaX + (areaW - drawW) / 2;
+  const drawY  = areaY + (areaH - drawH) / 2;
+
+  // Zemin gölgesi (elips)
   ctx.save();
-
-  ctx.beginPath();
-  ctx.rect(x, y, w, h);
-  ctx.clip();
-
-  ctx.filter = "saturate(1.18) contrast(1.12)";
-  cover(ctx, productImg, x, y, w, h, 0.60, 0.52);
-  ctx.filter = "none";
-
-  ctx.restore();
-
-  // Sol geçiş
-  const leftFade = ctx.createLinearGradient(210, 0, 560, 0);
-  leftFade.addColorStop(0, "rgba(0,0,0,1)");
-  leftFade.addColorStop(0.54, "rgba(0,0,0,0.78)");
-  leftFade.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = leftFade;
-  ctx.fillRect(190, 145, 410, 760);
-
-  // Üstten karartma
-  const topFade = ctx.createLinearGradient(0, y, 0, y + 170);
-  topFade.addColorStop(0, "rgba(0,0,0,0.82)");
-  topFade.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = topFade;
-  ctx.fillRect(x, y, w, 180);
-
-  // Alttan karartma
-  const bottomFade = ctx.createLinearGradient(0, y + h - 240, 0, y + h);
-  bottomFade.addColorStop(0, "rgba(0,0,0,0)");
-  bottomFade.addColorStop(1, "rgba(0,0,0,0.90)");
-  ctx.fillStyle = bottomFade;
-  ctx.fillRect(x, y + h - 250, w, 250);
-
-  // Sağ alt zemin gölgesi
-  const shadow = ctx.createRadialGradient(760, 815, 20, 760, 815, 370);
-  shadow.addColorStop(0, "rgba(0,0,0,0.72)");
+  const shadow = ctx.createRadialGradient(
+    drawX + drawW/2, drawY + drawH - 10, 10,
+    drawX + drawW/2, drawY + drawH + 20, drawW * 0.52
+  );
+  shadow.addColorStop(0, "rgba(0,0,0,0.70)");
+  shadow.addColorStop(0.5,"rgba(0,0,0,0.35)");
   shadow.addColorStop(1, "rgba(0,0,0,0)");
   ctx.fillStyle = shadow;
-  ctx.fillRect(360, 650, 740, 280);
+  ctx.beginPath();
+  ctx.ellipse(
+    drawX + drawW/2,
+    drawY + drawH + 18,
+    drawW * 0.48,
+    38,
+    0, 0, Math.PI * 2
+  );
+  ctx.fill();
+  ctx.restore();
+
+  // Ürün arkası sıcak halo
+  ctx.save();
+  const halo = ctx.createRadialGradient(
+    drawX + drawW/2, drawY + drawH/2, 40,
+    drawX + drawW/2, drawY + drawH/2, drawW * 0.72
+  );
+  halo.addColorStop(0, "rgba(255,210,60,0.20)");
+  halo.addColorStop(0.5,"rgba(255,140,0,0.08)");
+  halo.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = halo;
+  ctx.fillRect(areaX - 40, areaY - 40, areaW + 80, areaH + 80);
+  ctx.restore();
+
+  // Ürün görseli
+  ctx.save();
+  ctx.filter =
+    "saturate(1.20) contrast(1.10) " +
+    "drop-shadow(0px 12px 28px rgba(0,0,0,0.65))";
+  ctx.drawImage(productImg, drawX, drawY, drawW, drawH);
+  ctx.filter = "none";
+  ctx.restore();
+
+  // Sol fade (yazıyla çakışmasın)
+  const leftFade = ctx.createLinearGradient(310, 0, 560, 0);
+  leftFade.addColorStop(0, "rgba(0,0,0,1)");
+  leftFade.addColorStop(0.65,"rgba(0,0,0,0.50)");
+  leftFade.addColorStop(1, "rgba(0,0,0,0)");
+  ctx.fillStyle = leftFade;
+  ctx.fillRect(290, 140, 290, 760);
+
+  // Alt fade (fiyat alanına geçiş)
+  const bottomFade = ctx.createLinearGradient(0, 730, 0, 870);
+  bottomFade.addColorStop(0, "rgba(0,0,0,0)");
+  bottomFade.addColorStop(1, "rgba(0,0,0,0.95)");
+  ctx.fillStyle = bottomFade;
+  ctx.fillRect(300, 720, 820, 180);
 }
