@@ -5,7 +5,7 @@ import { drawLogo } from "./logo.js";
 import { drawProductImage } from "./image.js";
 import { drawProductInfo } from "./typography.js";
 import { drawPriceBlock } from "./price.js";
-
+import { loadTheme } from "./themes/premium/loader.js";
 
 function createProductFileName(title) {
   return String(title || "")
