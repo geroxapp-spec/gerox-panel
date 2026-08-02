@@ -5,9 +5,9 @@ export function drawProductImage(ctx, productImg){
   const imgH = productImg.naturalHeight || productImg.height || 800;
 
   const areaX = 560;
-  const areaY = 190;
+  const areaY = 175;
   const areaW = 520;
-  const areaH = 820;
+  const areaH = 590;   // altın plakanın üstünde bitsin, çakışma olmasın
 
   const ratio = Math.min(areaW/imgW, areaH/imgH);
   const drawW = imgW*ratio;
