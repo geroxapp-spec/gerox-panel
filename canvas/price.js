@@ -25,26 +25,65 @@ export function drawPriceBlock(ctx, deal, layout){
   const goldY = cardBottomY - priceAreaH;
   const goldH = priceAreaH;
 
-  // ---------- Eski fiyat (gold barın hemen üstü) ----------
+  // ---------- Eski fiyat + İndirim rozeti (yan yana, gold barın üstü) ----------
+  let oldPriceEndX = cardX + padX;
   if(old>0){
     const txt = money(old);
     ctx.save();
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,0.55)";
-    ctx.font = "600 28px Arial";
-    const oldY = goldY - 16;
+    ctx.font = "600 30px Arial";
+    const oldY = goldY - 20;
     ctx.fillText(txt, cardX+padX, oldY);
     const tw = ctx.measureText(txt).width;
-    ctx.strokeStyle = "rgba(255,90,90,0.85)";
-    ctx.lineWidth = 2.6;
+    ctx.strokeStyle = "rgba(255,60,60,0.9)";
+    ctx.lineWidth = 2.8;
     ctx.beginPath();
-    ctx.moveTo(cardX+padX, oldY-11);
-    ctx.lineTo(cardX+padX+tw, oldY-11);
+    ctx.moveTo(cardX+padX, oldY-12);
+    ctx.lineTo(cardX+padX+tw, oldY-12);
     ctx.stroke();
+    ctx.restore();
+    oldPriceEndX = cardX + padX + tw;
+  }
+
+  if(disc>0){
+    const bw = 118, bh = 54;
+    const notch = 14;
+    const bx = oldPriceEndX + 24;
+    const by = goldY - 20 - bh/2 - 4;
+
+    ctx.save();
+    ctx.shadowColor = "rgba(180,0,0,0.5)";
+    ctx.shadowBlur = 12;
+
+    ctx.beginPath();
+    ctx.moveTo(bx+notch, by);
+    ctx.lineTo(bx+bw, by);
+    ctx.arcTo(bx+bw+10, by, bx+bw+10, by+bh, 8);
+    ctx.lineTo(bx+bw+10, by+bh);
+    ctx.lineTo(bx+notch, by+bh);
+    ctx.lineTo(bx, by+bh/2);
+    ctx.closePath();
+
+    const rg = ctx.createLinearGradient(bx, by, bx+bw, by+bh);
+    rg.addColorStop(0, "#D40000");
+    rg.addColorStop(1, "#FF3300");
+    ctx.fillStyle = rg;
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#FFFFFF";
+    ctx.font = "800 26px Arial Black, Arial";
+    ctx.fillText("%"+disc, bx+bw/2+8, by+bh/2+3);
+
+    ctx.font = "700 14px Arial";
+    ctx.fillStyle = "#FFE3E3";
+    ctx.fillText("İNDİRİM", bx+bw/2+8, by+bh-8);
     ctx.restore();
   }
 
-  // ---------- Altın alt bar (kartla kaynaşmış) ----------
+  // ---------- Altın alt bar (kartla kaynaşmış, 3D bevel) ----------
   ctx.save();
   roundRectCorners(ctx, cardX, goldY, cardW, goldH, {tl:0, tr:0, br:cardR, bl:cardR});
   const pg = ctx.createLinearGradient(cardX, goldY, cardX, goldY+goldH);
@@ -56,19 +95,28 @@ export function drawPriceBlock(ctx, deal, layout){
   ctx.fill();
   ctx.restore();
 
-  // ÖZEL FİYAT etiketi
+  // Üst kabarık kenar (bevel)
   ctx.save();
-  ctx.textAlign = "left";
-  ctx.fillStyle = "rgba(40,25,0,0.62)";
-  ctx.font = "700 19px Arial";
-  ctx.fillText("ÖZEL FİYAT", cardX+padX, goldY+30);
+  roundRectCorners(ctx, cardX, goldY, cardW, 6, {tl:0, tr:0, br:0, bl:0});
+  ctx.fillStyle = "rgba(90,60,0,0.9)";
+  ctx.fill();
   ctx.restore();
 
-  // ---------- Yeni fiyat ----------
+  // İç parlaklık çizgisi
+  ctx.save();
+  ctx.strokeStyle = "rgba(255,255,220,0.6)";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(cardX+8, goldY+8);
+  ctx.lineTo(cardX+cardW-8, goldY+8);
+  ctx.stroke();
+  ctx.restore();
+
+  // ---------- Yeni fiyat (büyütülmüş) ----------
   const p = splitMoney(nw);
-  let size = 84;
+  let size = 108;
   ctx.font = "900 "+size+"px Impact, Arial Black, Arial";
-  while(ctx.measureText(p.lira).width > cardW-220 && size>56) size -= 4;
+  while(ctx.measureText(p.lira).width > cardW-180 && size>72) size -= 4;
 
   const fy = goldY + goldH - 26;
   const fx = cardX + padX;
@@ -87,41 +135,4 @@ export function drawPriceBlock(ctx, deal, layout){
   ctx.font = "700 "+Math.round(size*0.40)+"px Arial";
   ctx.fillText("₺", fx+lw+kw+16, fy-6);
   ctx.restore();
-
-  // ---------- İndirim rozeti (kenardan taşan, eğik) ----------
-  if(disc>0){
-    const bw = 138, bh = 72;
-    const bx = cardX + cardW - 38;
-    const by = goldY - 4;
-
-    ctx.save();
-    ctx.translate(bx, by);
-    ctx.rotate(-7*Math.PI/180);
-
-    ctx.shadowColor = "rgba(180,0,0,0.55)";
-    ctx.shadowBlur = 16;
-
-    roundRectCorners(ctx, -bw/2, -bh/2, bw, bh, {tl:14,tr:14,br:14,bl:14});
-    const rg = ctx.createLinearGradient(-bw/2,-bh/2,bw/2,bh/2);
-    rg.addColorStop(0, "#B80000");
-    rg.addColorStop(1, "#FF2A00");
-    ctx.fillStyle = rg;
-    ctx.fill();
-
-    ctx.strokeStyle = "rgba(255,180,180,0.55)";
-    ctx.lineWidth = 1.4;
-    ctx.stroke();
-    ctx.shadowBlur = 0;
-
-    ctx.textAlign = "center";
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "800 28px Arial Black, Arial";
-    ctx.fillText("%"+disc, 0, -2);
-
-    ctx.fillStyle = "#FFE3E3";
-    ctx.font = "700 17px Arial";
-    ctx.fillText("İNDİRİM", 0, 22);
-
-    ctx.restore();
-  }
 }
