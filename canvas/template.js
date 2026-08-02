@@ -82,8 +82,10 @@ export async function renderPoster({ deal, business }) {
   if (!ctx) throw new Error("Canvas context oluşturulamadı.");
 
   const productImg = await loadProductImage(deal);
+  const theme = await loadTheme();
 
   drawBackground(ctx, productImg);
+  ctx.drawImage(theme.background, 0, 0, 1080, 1080);
   await drawLogo(ctx, business);
   drawProductImage(ctx, productImg);
 
