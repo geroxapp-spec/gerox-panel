@@ -75,12 +75,13 @@ export function drawPriceBlock(ctx, deal, layout){
     drawRibbon(ctx, ribbonX, ribbonY, ribbonW, ribbonH, disc);
   }
 
-  // ---------- Kartın üstüne binen "altın plaka" ----------
+// ---------- Kartın üstüne binen "altın plaka" (SABİT, asla taşmaz) ----------
   const plateW = cardW + 70;
-  const plateH = 210;
+  const plateH = 190;
   const plateX = cardX - 8;
-  const plateY = cardBottomY - 66;
-
+  const plateY = cardBottomY - 60;
+  
+  // dip: 855-60+190 = 985 → tarihten önce biter
   ctx.save();
   ctx.shadowColor = "rgba(0,0,0,0.55)";
   ctx.shadowBlur = 26;
