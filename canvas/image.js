@@ -1,87 +1,65 @@
 export function drawProductImage(ctx, productImg){
-  if(!productImg){
-    ctx.save();
-    ctx.textAlign="center";
-    ctx.fillStyle="rgba(255,255,255,0.08)";
-    ctx.font="500 26px Arial";
-    ctx.fillText("Görsel Bulunamadı", 720, 490);
-    ctx.restore();
-    return;
-  }
+  if(!productImg) return;
 
-  const imgW = productImg.naturalWidth  || productImg.width  || 800;
-  const imgH = productImg.naturalHeight || productImg.height || 800;
+  const W=1080;
 
-  // Ürünün sığacağı alan - sağ taraf
-  const areaX = 340;
-  const areaY = 160;
-  const areaW = 700;
-  const areaH = 660;
+  const imgW=productImg.naturalWidth||productImg.width||800;
+  const imgH=productImg.naturalHeight||productImg.height||800;
 
-  // Orantılı boyut hesapla (contain)
-  const ratio  = Math.min(areaW / imgW, areaH / imgH);
-  const drawW  = imgW * ratio;
-  const drawH  = imgH * ratio;
+  // Sağ taraf alanı
+  const areaX=460;
+  const areaY=120;
+  const areaW=590;
+  const areaH=720;
 
-  // Alanın ortasına hizala
-  const drawX  = areaX + (areaW - drawW) / 2;
-  const drawY  = areaY + (areaH - drawH) / 2;
+  const ratio=Math.min(areaW/imgW, areaH/imgH);
+  const drawW=imgW*ratio;
+  const drawH=imgH*ratio;
+  const drawX=areaX+(areaW-drawW)/2;
+  const drawY=areaY+(areaH-drawH)/2;
+  const cx=drawX+drawW/2;
+  const cy=drawY+drawH/2;
 
-  // Zemin gölgesi (elips)
+  // Ürün arkası büyük altın halka
   ctx.save();
-  const shadow = ctx.createRadialGradient(
-    drawX + drawW/2, drawY + drawH - 10, 10,
-    drawX + drawW/2, drawY + drawH + 20, drawW * 0.52
-  );
-  shadow.addColorStop(0, "rgba(0,0,0,0.70)");
-  shadow.addColorStop(0.5,"rgba(0,0,0,0.35)");
-  shadow.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = shadow;
+  const ring=ctx.createRadialGradient(cx,cy-30,drawW*0.28,cx,cy-30,drawW*0.62);
+  ring.addColorStop(0,"rgba(0,0,0,0)");
+  ring.addColorStop(0.72,"rgba(255,200,30,0.0)");
+  ring.addColorStop(0.82,"rgba(255,200,30,0.55)");
+  ring.addColorStop(0.90,"rgba(255,160,0,0.30)");
+  ring.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=ring;
   ctx.beginPath();
-  ctx.ellipse(
-    drawX + drawW/2,
-    drawY + drawH + 18,
-    drawW * 0.48,
-    38,
-    0, 0, Math.PI * 2
-  );
+  ctx.ellipse(cx,cy-30,drawW*0.62,drawW*0.62,0,0,Math.PI*2);
   ctx.fill();
   ctx.restore();
 
-  // Ürün arkası sıcak halo
+  // Ürün arkası sıcak glow
   ctx.save();
-  const halo = ctx.createRadialGradient(
-    drawX + drawW/2, drawY + drawH/2, 40,
-    drawX + drawW/2, drawY + drawH/2, drawW * 0.72
-  );
-  halo.addColorStop(0, "rgba(255,210,60,0.20)");
-  halo.addColorStop(0.5,"rgba(255,140,0,0.08)");
-  halo.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = halo;
-  ctx.fillRect(areaX - 40, areaY - 40, areaW + 80, areaH + 80);
+  const glow=ctx.createRadialGradient(cx,cy,20,cx,cy,drawW*0.75);
+  glow.addColorStop(0,"rgba(255,180,20,0.18)");
+  glow.addColorStop(0.5,"rgba(200,80,0,0.10)");
+  glow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=glow;
+  ctx.fillRect(areaX-60,areaY-60,areaW+120,areaH+120);
   ctx.restore();
 
-  // Ürün görseli
+  // Zemin gölgesi
   ctx.save();
-  ctx.filter =
-    "saturate(1.20) contrast(1.10) " +
-    "drop-shadow(0px 12px 28px rgba(0,0,0,0.65))";
-  ctx.drawImage(productImg, drawX, drawY, drawW, drawH);
-  ctx.filter = "none";
+  const shadow=ctx.createRadialGradient(cx,drawY+drawH,10,cx,drawY+drawH+10,drawW*0.45);
+  shadow.addColorStop(0,"rgba(0,0,0,0.80)");
+  shadow.addColorStop(0.5,"rgba(0,0,0,0.40)");
+  shadow.addColorStop(1,"rgba(0,0,0,0)");
+  ctx.fillStyle=shadow;
+  ctx.beginPath();
+  ctx.ellipse(cx,drawY+drawH+8,drawW*0.42,28,0,0,Math.PI*2);
+  ctx.fill();
   ctx.restore();
 
-  // Sol fade (yazıyla çakışmasın)
-  const leftFade = ctx.createLinearGradient(310, 0, 560, 0);
-  leftFade.addColorStop(0, "rgba(0,0,0,1)");
-  leftFade.addColorStop(0.65,"rgba(0,0,0,0.50)");
-  leftFade.addColorStop(1, "rgba(0,0,0,0)");
-  ctx.fillStyle = leftFade;
-  ctx.fillRect(290, 140, 290, 760);
-
-  // Alt fade (fiyat alanına geçiş)
-  const bottomFade = ctx.createLinearGradient(0, 730, 0, 870);
-  bottomFade.addColorStop(0, "rgba(0,0,0,0)");
-  bottomFade.addColorStop(1, "rgba(0,0,0,0.95)");
-  ctx.fillStyle = bottomFade;
-  ctx.fillRect(300, 720, 820, 180);
+  // Ürün
+  ctx.save();
+  ctx.filter="saturate(1.25) contrast(1.12) drop-shadow(0 16px 40px rgba(0,0,0,0.75))";
+  ctx.drawImage(productImg,drawX,drawY,drawW,drawH);
+  ctx.filter="none";
+  ctx.restore();
 }
