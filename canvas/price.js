@@ -25,15 +25,17 @@ export function drawPriceBlock(ctx, deal, layout){
   const goldY = cardBottomY - priceAreaH;
   const goldH = priceAreaH;
 
-  // ---------- Eski fiyat + İndirim rozeti (yan yana, gold barın üstü) ----------
+  // ---------- Eski fiyat + İndirim rozeti (rahat boşluklu, gold barın üstü) ----------
+  const rowCenterY = goldY - 55;
   let oldPriceEndX = cardX + padX;
+
   if(old>0){
     const txt = money(old);
     ctx.save();
     ctx.textAlign = "left";
     ctx.fillStyle = "rgba(255,255,255,0.55)";
     ctx.font = "600 30px Arial";
-    const oldY = goldY - 20;
+    const oldY = rowCenterY + 10;
     ctx.fillText(txt, cardX+padX, oldY);
     const tw = ctx.measureText(txt).width;
     ctx.strokeStyle = "rgba(255,60,60,0.9)";
@@ -47,10 +49,10 @@ export function drawPriceBlock(ctx, deal, layout){
   }
 
   if(disc>0){
-    const bw = 118, bh = 54;
-    const notch = 14;
-    const bx = oldPriceEndX + 24;
-    const by = goldY - 20 - bh/2 - 4;
+    const bw = 130, bh = 64;
+    const notch = 16;
+    const bx = oldPriceEndX + 34;
+    const by = rowCenterY - bh/2 + 8;
 
     ctx.save();
     ctx.shadowColor = "rgba(180,0,0,0.5)";
@@ -74,12 +76,12 @@ export function drawPriceBlock(ctx, deal, layout){
 
     ctx.textAlign = "center";
     ctx.fillStyle = "#FFFFFF";
-    ctx.font = "800 26px Arial Black, Arial";
-    ctx.fillText("%"+disc, bx+bw/2+8, by+bh/2+3);
+    ctx.font = "800 30px Arial Black, Arial";
+    ctx.fillText("%"+disc, bx+bw/2+8, by+bh/2+2);
 
-    ctx.font = "700 14px Arial";
+    ctx.font = "700 16px Arial";
     ctx.fillStyle = "#FFE3E3";
-    ctx.fillText("İNDİRİM", bx+bw/2+8, by+bh-8);
+    ctx.fillText("İNDİRİM", bx+bw/2+8, by+bh-10);
     ctx.restore();
   }
 
@@ -112,11 +114,11 @@ export function drawPriceBlock(ctx, deal, layout){
   ctx.stroke();
   ctx.restore();
 
-  // ---------- Yeni fiyat (büyütülmüş) ----------
+  // ---------- Yeni fiyat (büyük, bar'ı dolduran) ----------
   const p = splitMoney(nw);
-  let size = 108;
+  let size = 118;
   ctx.font = "900 "+size+"px Impact, Arial Black, Arial";
-  while(ctx.measureText(p.lira).width > cardW-180 && size>72) size -= 4;
+  while(ctx.measureText(p.lira).width > cardW-180 && size>80) size -= 4;
 
   const fy = goldY + goldH - 26;
   const fx = cardX + padX;
