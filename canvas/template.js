@@ -12,6 +12,28 @@ export async function renderPoster({ deal, business }) {
   // Ürün görseli
   let productImg = null;
 
+function createFileName(title){
+  return String(title || "")
+    .toLocaleLowerCase("tr-TR")
+    .replace(/\([^)]*\)/g, "")
+    .replace(/ç/g,"c")
+    .replace(/ğ/g,"g")
+    .replace(/ı/g,"i")
+    .replace(/ö/g,"o")
+    .replace(/ş/g,"s")
+    .replace(/ü/g,"u")
+    .replace(/\s+/g,"_")
+    .trim() + ".png";
+}
+
+const fileName = createFileName(deal.title);
+const localPath = `./canvas/products/${fileName}`;
+
+try {
+  productImg = await loadImage(localPath);
+} catch (e) {
+
+  // fallback: image_url varsa onu dene
   if (deal.image_url) {
     productImg = new Image();
     productImg.crossOrigin = "anonymous";
@@ -22,6 +44,7 @@ export async function renderPoster({ deal, business }) {
       productImg.onerror = reject;
     });
   }
+}
 
   // Logo
   let logoImg = null;
