@@ -9,9 +9,9 @@ export async function renderTheme({
   logoImg
 }) {
 
-  const bg = await loadImage(`/canvas/themes/${themeName}/background.png`);
-  const fg = await loadImage(`/canvas/themes/${themeName}/foreground.png`);
-  const config = await fetch(`/canvas/themes/${themeName}/config.json`)
+  const bg = await loadImage(`./canvas/themes/${themeName}/background.png`);
+  const fg = await loadImage(`./canvas/themes/${themeName}/foreground.png`);
+  const config = await fetch(`./canvas/themes/${themeName}/config.json`)
     .then(r => r.json());
 
   // 1️⃣ Background
