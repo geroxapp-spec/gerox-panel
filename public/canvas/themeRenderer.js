@@ -438,34 +438,15 @@ if (
   }
 
 
-  // DATE
-  if (deal.start_date && deal.end_date) {
-
-  const months = [
-    "OCAK", "ŞUBAT", "MART", "NİSAN",
-    "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS",
-    "EYLÜL", "EKİM", "KASIM", "ARALIK"
-  ];
-
-  const start = new Date(deal.start_date);
-  const end = new Date(deal.end_date);
-
-  const startDay = String(start.getDate()).padStart(2, "0");
-  const endDay = String(end.getDate()).padStart(2, "0");
-
-  const month = months[end.getMonth()];
-  const year = end.getFullYear();
-
-  const dateText =
-    `${startDay} - ${endDay} ${month} ${year} TARİHLERİ ARASINDA GEÇERLİDİR.`;
-
+// DATE
+if (deal.date_text) {
   ctx.save();
 
   ctx.fillStyle = "#FFFFFF";
   ctx.font = "bold 24px Arial";
 
   ctx.fillText(
-    dateText,
+    deal.date_text,
     config.date.x,
     config.date.y
   );
