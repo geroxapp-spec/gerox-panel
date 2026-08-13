@@ -438,27 +438,37 @@ if (
   }
 
 
-  // =====================================================
-  // ALT TARİH
-  // =====================================================
+  // DATE
+if (deal.start_date && deal.end_date) {
 
-  if (deal.date_text) {
+  const months = [
+    "OCAK", "ŞUBAT", "MART", "NİSAN",
+    "MAYIS", "HAZİRAN", "TEMMUZ", "AĞUSTOS",
+    "EYLÜL", "EKİM", "KASIM", "ARALIK"
+  ];
 
-    ctx.save();
+  const start = new Date(deal.start_date);
+  const end = new Date(deal.end_date);
 
-    ctx.textAlign = "left";
+  const startDay = String(start.getDate()).padStart(2, "0");
+  const endDay = String(end.getDate()).padStart(2, "0");
 
-    ctx.fillStyle = "#FFFFFF";
+  const month = months[end.getMonth()];
+  const year = end.getFullYear();
 
-    ctx.font =
-      "700 28px Arial";
+  const dateText =
+    `${startDay} - ${endDay} ${month} ${year} TARİHLERİ ARASINDA GEÇERLİDİR.`;
 
-    ctx.fillText(
-      deal.date_text,
-      config.date.x,
-      config.date.y
-    );
+  ctx.save();
 
-    ctx.restore();
-  }
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = "bold 24px Arial";
+
+  ctx.fillText(
+    dateText,
+    config.date.x,
+    config.date.y
+  );
+
+  ctx.restore();
 }
