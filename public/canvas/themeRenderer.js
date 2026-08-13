@@ -180,7 +180,7 @@ function drawThemeText(ctx, deal, config) {
 
     ctx.save();
 
-    ctx.fillStyle = "#E30613";
+    ctx.fillStyle = "#FFFFFF";
     ctx.font = "900 28px Arial Black, Arial";
 
     ctx.fillText(
