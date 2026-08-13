@@ -27,7 +27,7 @@ function createFileName(title){
 }
 
 const fileName = createFileName(deal.title);
-const localPath = `./canvas/products/${fileName}`;
+const localPath = `/products/${fileName}`;
 
 try {
   productImg = await loadImage(localPath);
