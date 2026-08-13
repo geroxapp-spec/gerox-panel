@@ -11,56 +11,40 @@ export async function renderPoster({ deal, business }) {
   const ctx = canvas.getContext("2d");
 
   // =====================================================
-  // ÜRÜN PNG'SİNİ BUL
+  // ÜRÜN PNG
   // =====================================================
 
   let productImg = null;
 
-  function createFileName(title) {
-
-    return String(title || "")
-      .toLocaleLowerCase("tr-TR")
-      .replace(/\([^)]*\)/g, "")
-      .replace(/ç/g, "c")
-      .replace(/ğ/g, "g")
-      .replace(/ı/g, "i")
-      .replace(/ö/g, "o")
-      .replace(/ş/g, "s")
-      .replace(/ü/g, "u")
-      .replace(/\s+/g, "_")
-      .trim() + ".png";
-  }
-
-  const fileName = createFileName(deal.title);
-
   /*
-   * ÖNEMLİ:
+   * Şimdilik sistemi test ediyoruz.
    *
-   * Ürünler artık:
+   * Karpuz PNG'si kesin olarak buradan okunacak:
    *
-   * /public/products/
+   * /public/products/karpuz.png
    *
-   * klasöründen okunuyor.
+   * Tarayıcı tarafındaki gerçek adres:
+   *
+   * /products/karpuz.png
    */
-
-  const localPath = `/products/${fileName}`;
 
   try {
 
-    productImg = await loadImage(localPath);
+    productImg = await loadImage(
+      "/products/karpuz.png"
+    );
+
+    console.log(
+      "GEROX: Karpuz PNG başarıyla yüklendi.",
+      productImg
+    );
 
   } catch (error) {
 
     console.error(
-      "Ürün PNG bulunamadı:",
-      localPath
+      "GEROX HATA: Karpuz PNG yüklenemedi.",
+      error
     );
-
-    /*
-     * ARTIK internetten ürün fotoğrafı çekmiyoruz.
-     *
-     * Photoshop'ta hazırladığımız PNG kullanılacak.
-     */
 
     productImg = null;
   }
@@ -72,28 +56,19 @@ export async function renderPoster({ deal, business }) {
 
   let logoImg = null;
 
-  if (business?.logo_url) {
+  if (business && business.logo_url) {
 
     try {
 
-      logoImg = new Image();
-
-      logoImg.crossOrigin = "anonymous";
-
-      logoImg.src = business.logo_url;
-
-      await new Promise((resolve, reject) => {
-
-        logoImg.onload = resolve;
-
-        logoImg.onerror = reject;
-
-      });
+      logoImg = await loadImage(
+        business.logo_url
+      );
 
     } catch (error) {
 
       console.warn(
-        "Market logosu yüklenemedi."
+        "GEROX: Market logosu yüklenemedi.",
+        error
       );
 
       logoImg = null;
@@ -102,22 +77,22 @@ export async function renderPoster({ deal, business }) {
 
 
   // =====================================================
-  // PNG TABANLI TEMA
+  // PNG TABANLI AFİŞ RENDER
   // =====================================================
 
   await renderTheme({
 
-    ctx,
+    ctx: ctx,
 
     themeName: "premium",
 
-    deal,
+    deal: deal,
 
-    business,
+    business: business,
 
-    productImg,
+    productImg: productImg,
 
-    logoImg
+    logoImg: logoImg
 
   });
 
