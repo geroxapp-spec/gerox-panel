@@ -265,6 +265,7 @@ function drawThemeText(ctx, deal, config) {
   }
 
 
+  
   // =====================================================
   // ESKİ FİYAT
   // =====================================================
@@ -327,53 +328,47 @@ function drawThemeText(ctx, deal, config) {
 
 
   // =====================================================
-  // YENİ FİYAT
-  // =====================================================
+// YENİ FİYAT
+// =====================================================
 
-  if (
-    deal.new_price !== undefined &&
-    deal.new_price !== null &&
-    deal.new_price !== ""
-  ) {
+if (
+  deal.new_price !== undefined &&
+  deal.new_price !== null &&
+  deal.new_price !== ""
+) {
 
-    const newPrice =
-      Number(deal.new_price)
-        .toLocaleString("tr-TR", {
-          minimumFractionDigits: 2,
-          maximumFractionDigits: 2
-        });
+  const newPrice = Number(deal.new_price)
+    .toLocaleString("tr-TR", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    });
 
+  ctx.save();
 
-    ctx.save();
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
 
-    ctx.fillStyle = "#FFFFFF";
+  ctx.font = "900 100px Arial Black, Arial";
 
-    ctx.font =
-      "900 110px Arial Black, Arial";
+  ctx.fillText(
+    newPrice,
+    config.newPrice.x,
+    config.newPrice.y
+  );
 
-    ctx.fillText(
-      newPrice,
-      config.newPrice.x,
-      config.newPrice.y
-    );
+  const priceWidth = ctx.measureText(newPrice).width;
 
+  ctx.font = "900 52px Arial Black, Arial";
 
-    // ₺
+  ctx.fillText(
+    "₺",
+    config.newPrice.x + priceWidth + 15,
+    config.newPrice.y - 8
+  );
 
-    const priceWidth =
-      ctx.measureText(newPrice).width;
-
-    ctx.font =
-      "900 55px Arial Black, Arial";
-
-    ctx.fillText(
-      "₺",
-      config.newPrice.x + priceWidth + 18,
-      config.newPrice.y - 8
-    );
-
-    ctx.restore();
-  }
+  ctx.restore();
+}
 
 
   // =====================================================
