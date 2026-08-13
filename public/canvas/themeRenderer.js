@@ -436,20 +436,3 @@ if (
       ctx.restore();
     }
   }
-
-
-// DATE
-if (deal.date_text) {
-  ctx.save();
-
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = "bold 24px Arial";
-
-  ctx.fillText(
-    deal.date_text,
-    config.date.x,
-    config.date.y
-  );
-
-  ctx.restore();
-}
