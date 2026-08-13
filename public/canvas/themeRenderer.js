@@ -439,7 +439,7 @@ if (
 
 
   // DATE
-if (deal.start_date && deal.end_date) {
+  if (deal.start_date && deal.end_date) {
 
   const months = [
     "OCAK", "ŞUBAT", "MART", "NİSAN",
